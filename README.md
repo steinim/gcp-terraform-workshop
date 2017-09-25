@@ -7,10 +7,10 @@ In this tutorial you will learn how to use Terrafrom for provisioning basic infr
 1. This tutorial assumes you already have a Cloud Platform account set up for your organization and that you are allowed to make organizational-level changes in the account.
 2. This tutorial assumes that you have the following tools installed.
     * Terraform (`brew install terrafrom`)
-    * Google Cloud SDK gcloud command-line tool (brew install gcloud`)
+    * Google Cloud SDK gcloud command-line tool (`brew install gcloud`)
 
 ### Costs
-This tutorial uses billable components of GCP, Google Cloud Storage and Compute Engine.
+Google Cloud Storage and Compute Engine are billable components.
 
 ## Objectives
 
@@ -19,6 +19,8 @@ This tutorial uses billable components of GCP, Google Cloud Storage and Compute 
 * Configure remote state in Google Cloud Storage (GCS).
 * Use Terraform to provision a new project and an instance in that project.
 * Architecture diagram for tutorial components:
+
+!! Architecture diagram goes here
 
 Figure 1. Architecture diagram for tutorial components architecture diagram
 
@@ -118,9 +120,12 @@ Next, initialize the backend:
 
 `terraform init`
 
-```Use Terraform to create a new project and Compute Engine instance
+```
 
-The project.tf file:
+## Use Terraform to create a new project and Compute Engine instance
+
+The `project.tf` file:
+
 ```
 variable "project_name" {}
 variable "billing_account" {}
