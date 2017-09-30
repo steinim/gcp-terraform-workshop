@@ -14,21 +14,22 @@ Google Cloud Storage and Compute Engine are billable components.
 
 ## Objectives
 
-* Create a Terraform Admin Project for the service account and remote state bucket.
-* Grant Organization-level permissions to the service account.
-* Configure remote state in Google Cloud Storage (GCS).
-* Use Terraform to provision a new project and an instance in that project.
-* Architecture diagram for tutorial components:
+* ...
+
+## Architecture diagram for tutorial components:
 
 !! Architecture diagram goes here
 
 Figure 1. Architecture diagram for tutorial components architecture diagram
 
-# Set up the environment
+# Task 1: Set up the environment
 The setup is based on [Managing GCP Projects with Terraform](https://cloud.google.com/community/tutorials/managing-gcp-projects-with-terraform) by [Dan Isla](https://github.com/danisla), Google Cloud Solution Architect, Google
 
-## Export the following variables to your environment for use throughout the tutorial.
+## Objectives
+* Create a Terraform Admin Project for the service account and a remote state bucket.
+* Configure remote state in Google Cloud Storage (GCS).
 
+## Export the following variables to your environment for use throughout the tutorial.
 ```
 export TF_VAR_org_id=YOUR_ORG_ID
 export TF_VAR_billing_account=YOUR_BILLING_ACCOUNT_ID
@@ -87,21 +88,6 @@ gcloud service-management enable cloudbilling.googleapis.com
 gcloud service-management enable iam.googleapis.com
 gcloud service-management enable compute.googleapis.com
 ```
-<!--
-### Add organization/folder-level permissions
-
-Grant the service account permission to create projects and assign billing accounts:
-```
-gcloud beta organizations add-iam-policy-binding ${TF_VAR_org_id} \
-  --member serviceAccount:terraform@${TF_ADMIN}.iam.gserviceaccount.com \
-  --role roles/resourcemanager.projectCreator
-
-gcloud beta organizations add-iam-policy-binding ${TF_VAR_org_id} \
-  --member serviceAccount:terraform@${TF_ADMIN}.iam.gserviceaccount.com \
-  --role roles/billing.user
-```
--->
-
 ## Set up remote state in Cloud Storage
 
 Create the remote backend bucket in Cloud Storage and the backend.tf file for storage of the terraform.tfstate file:
@@ -120,19 +106,24 @@ terraform {
 EOF
 ```
 
-Next, initialize the backend:
-
+## Initialize the backend:
 `terraform init` and check that everything works with `terraform plan`
 
-## Use Terraform to create a new project and Compute Engine instance
+# Task 2: Use Terraform to create a new project
 
-The `project.tf` file:
+## Objectives
+* Organize your code into environments and modules
+* Usage of variables and outputs
+* Use Terraform to provision a new project
+
+## Create your first module: project
+Create the following files in `modules/project/`:
+  * `main.tf`
+  * `vars.tf`
+  * `outputs.tf`
+
+`main.tf`:
 ```
-variable "project_name" {}
-variable "billing_account" {}
-variable "org_id" {}
-variable "region" {}
-
 provider "google" {
  region = "${var.region}"
 }
@@ -155,19 +146,65 @@ resource "google_project_services" "project" {
    "compute.googleapis.com"
  ]
 }
+```
+Terraform resources used:
+  * [provider "google"](https://www.terraform.io/docs/providers/google/index.html): The Google cloud provider config. The credentials will be pulled from the GOOGLE_CREDENTIALS environment variable (set later in tutorial).
+  * [resource "random_id"](https://www.terraform.io/docs/providers/random/r/id.html): Project IDs must be unique. Generate a random one prefixed by the desired project ID.
+  * [resource "google_project"](https://www.terraform.io/docs/providers/google/r/google_project.html): The new project to create, bound to the desired organization ID and billing account.
+  * [resource "google_project_services"](https://www.terraform.io/docs/providers/google/r/google_project_services.html): Services and APIs enabled within the new project. Note that if you visit the web console after running Terraform, additional APIs may be implicitly enabled and Terraform would become out of sync. Re-running terraform plan will show you these changes before Terraform attempts to disable the APIs that were implicitly enabled. You can also set the full set of expected APIs beforehand to avoid the synchronization issue.
 
+`outputs.tf`:
+```
 output "project_id" {
  value = "${google_project.project.project_id}"
 }
 ```
-
 Terraform resources used:
-  * [provider "google"](https://www.terraform.io/docs/providers/google/index.html): The Google cloud provider config. The credentials will be pulled from the GOOGLE_CREDENTIALS environment variable (set later in tutorial).
-  * [esource "random_id"](https://www.terraform.io/docs/providers/random/r/id.html): Project IDs must be unique. Generate a random one prefixed by the desired project ID.
-  * [esource "google_project"](https://www.terraform.io/docs/providers/google/r/google_project.html): The new project to create, bound to the desired organization ID and billing account.
-  * [esource "google_project_services"](https://www.terraform.io/docs/providers/google/r/google_project_services.html): Services and APIs enabled within the new project. Note that if you visit the web console after running Terraform, additional APIs may be implicitly enabled and Terraform would become out of sync. Re-running terraform plan will show you these changes before Terraform attempts to disable the APIs that were implicitly enabled. You can also set the full set of expected APIs beforehand to avoid the synchronization issue.
   * output "project_id"(https://www.terraform.io/intro/getting-started/outputs.html): The project ID is randomly generated for uniqueness. Use an output variable to display it after Terraform runs for later reference. The length of the project ID should not exceed 30 characters.
 
+`vars.tf`:
+```
+variable "project_name" {}
+variable "billing_account" {}
+variable "org_id" {}
+variable "region" {}
+```
+
+## Create your first environment: test
+
+Create the following files in `test/`:
+  * `main.tf`
+  * `vars.tf`
+
+`main.tf`:
+```
+module "project" {
+  source          = "../modules/project"
+  project_name    = "${var.project_name}"
+  billing_account = "${var.billing_account}"
+  org_id          = "${var.org_id}"
+  region          = "${var.region}"
+}
+```
+
+`vars.tf`:
+```
+variable "project_name" { default = "hello-prod" }
+variable "billing_account" {}
+variable "org_id" {}
+variable "region" { default = "europe-west1" }
+```
+
+## Initialize once again to download providers used in the module:
+`terraform init`
+
+## Always run plan first!
+`terraform plan`
+
+## Provision the infrastructure
+`terraform apply`
+
+---
 
 The `compute.tf` file:
 ```
