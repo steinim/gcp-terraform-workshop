@@ -21,3 +21,15 @@ module "network" {
   ssh_key               = "${var.ssh_key}"
 }
 
+module "application" {
+  source                = "../modules/compute"
+  name                  = "${module.project.name}"
+  project               = "${module.project.id}"
+  count                 = "${var.appserver_count}"
+  zones                 = "${var.zones}"
+  subnet_names          = "${module.network.private_subnet_names}"
+  image                 = "${var.app_image}"
+  instance_type         = "${var.app_instance_type}"
+  user                  = "${var.user}"
+  ssh_key               = "${var.ssh_key}"
+}
