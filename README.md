@@ -124,8 +124,6 @@ Next, initialize the backend:
 
 `terraform init` and check that everything works with `terraform plan`
 
-```
-
 ## Use Terraform to create a new project and Compute Engine instance
 
 The `project.tf` file:
