@@ -87,7 +87,7 @@ gcloud service-management enable cloudbilling.googleapis.com
 gcloud service-management enable iam.googleapis.com
 gcloud service-management enable compute.googleapis.com
 ```
-
+<!--
 ### Add organization/folder-level permissions
 
 Grant the service account permission to create projects and assign billing accounts:
@@ -100,6 +100,7 @@ gcloud beta organizations add-iam-policy-binding ${TF_VAR_org_id} \
   --member serviceAccount:terraform@${TF_ADMIN}.iam.gserviceaccount.com \
   --role roles/billing.user
 ```
+-->
 
 ## Set up remote state in Cloud Storage
 
