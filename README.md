@@ -31,8 +31,9 @@ The setup is based on [Managing GCP Projects with Terraform](https://cloud.googl
 
 ## Export the following variables to your environment for use throughout the tutorial.
 ```
-export TF_VAR_org_id=YOUR_ORG_ID
-export TF_VAR_billing_account=YOUR_BILLING_ACCOUNT_ID
+export TF_VAR_org_id=<your_org_id>
+export TF_VAR_billing_account=<your_billing_account_id>
+export TF_VAR_region=<region>
 export TF_ADMIN=${USER}-terraform-admin
 export TF_CREDS=~/.config/gcloud/terraform-admin.json
 ```
@@ -94,7 +95,7 @@ Create the remote backend bucket in Cloud Storage and the backend.tf file for st
 ```
 cd terrafrom/test
 
-gsutil mb -p ${TF_ADMIN} gs://${TF_ADMIN} # Ignore warning about AWS_CREDENTIAL_FILE
+gsutil mb -l <region> -p ${TF_ADMIN} gs://${TF_ADMIN} # Ignore warning about AWS_CREDENTIAL_FILE
 
 cat > backend.tf <<EOF
 terraform {
@@ -111,12 +112,18 @@ EOF
 
 # Task 2: Use Terraform to create a new project
 
+## Export the following variables to your environment.
+```
+export TF_VAR_ssh_key=<your public ssh key>
+export TF_VAR_user=$USER
+```
+
 ## Objectives
 * Organize your code into environments and modules
 * Usage of variables and outputs
 * Use Terraform to provision a new project
 
-## Create your first module: project
+## Create your first module: `project`
 Create the following files in `modules/project/`:
   * `main.tf`
   * `vars.tf`
@@ -130,11 +137,11 @@ provider "google" {
 
 resource "random_id" "id" {
  byte_length = 4
- prefix      = "${var.project_name}-"
+ prefix      = "${var.name}-"
 }
 
 resource "google_project" "project" {
- name            = "${var.project_name}"
+ name            = "${var.name}"
  project_id      = "${random_id.id.hex}"
  billing_account = "${var.billing_account}"
  org_id          = "${var.org_id}"
@@ -155,16 +162,24 @@ Terraform resources used:
 
 `outputs.tf`:
 ```
-output "project_id" {
- value = "${google_project.project.project_id}"
+output "id" {
+ value = "${google_project.project.id}"
+}
+
+output "name" {
+ value = "${google_project.project.name}"
+}
+
+output "region" {
+ value = "${google_project.project.region}"
 }
 ```
 Terraform resources used:
-  * output "project_id"(https://www.terraform.io/intro/getting-started/outputs.html): The project ID is randomly generated for uniqueness. Use an output variable to display it after Terraform runs for later reference. The length of the project ID should not exceed 30 characters.
+  * [output "id"](https://www.terraform.io/intro/getting-started/outputs.html): The project ID is randomly generated for uniqueness. Use an output variable to display it after Terraform runs for later reference. The length of the project ID should not exceed 30 characters.
 
 `vars.tf`:
 ```
-variable "project_name" {}
+variable "name" {}
 variable "billing_account" {}
 variable "org_id" {}
 variable "region" {}
@@ -172,6 +187,8 @@ variable "region" {}
 
 ## Create your first environment: test
 
+Coming soon!
+<!--
 Create the following files in `test/`:
   * `main.tf`
   * `vars.tf`
@@ -194,7 +211,7 @@ variable "billing_account" {}
 variable "org_id" {}
 variable "region" { default = "europe-west1" }
 ```
-
+-->
 ## Initialize once again to download providers used in the module:
 `terraform init`
 
@@ -204,8 +221,10 @@ variable "region" { default = "europe-west1" }
 ## Provision the infrastructure
 `terraform apply`
 
----
+Verify your success in the GCP console 💰
 
+---
+<!--
 The `compute.tf` file:
 ```
 data "google_compute_zones" "available" {}
@@ -246,7 +265,7 @@ export GOOGLE_PROJECT=${TF_ADMIN}
 Set the name of the project you want to create and the region you want to create the resources in:
 ```
 export TF_VAR_project_name=${USER}-test-compute
-export TF_VAR_region=us-central1
+export TF_VAR_region=europe-west1
 ```
 
 Preview the Terraform changes:
@@ -259,6 +278,7 @@ SSH into the instance created:
 `gcloud compute ssh $(terraform output | grep instance_id | cut -d = -f2)`
 
 Note that SSH may not work unless your organization user also has access to the newly created project resources.
+-->
 
 # Cleaning up
 
