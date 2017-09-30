@@ -10,7 +10,7 @@ In this tutorial you will learn how to use Terrafrom for provisioning basic infr
     * [Google Cloud SDK gcloud](https://cloud.google.com/sdk/docs/quickstart-mac-os-x) command-line tool
 
 ### Costs
-Google Cloud Storage and Compute Engine are billable components.
+Google Cloud Storage, Compute Engine and Cloud SQL are billable components.
 
 ## Objectives
 
@@ -33,14 +33,14 @@ The setup is based on [Managing GCP Projects with Terraform](https://cloud.googl
 ```
 export TF_VAR_org_id=<your_org_id>
 export TF_VAR_billing_account=<your_billing_account_id>
-export TF_VAR_region=<region>
+export TF_VAR_region=europe-west3 # change this if you want to use a different region
 export TF_ADMIN=${USER}-terraform-admin
 export TF_CREDS=~/.config/gcloud/terraform-admin.json
 ```
 
 **Note:** The TF_ADMIN variable will be used for the name of the Terraform Admin Project and must be unique.
 
-You can find the values for YOUR_ORG_ID and YOUR_BILLING_ACCOUNT_ID using the following commands:
+You can find the values for <your_org_id> and <your_billing_account_id> using the following commands:
 ```
 gcloud beta organizations list
 gcloud alpha billing accounts list
@@ -95,7 +95,7 @@ Create the remote backend bucket in Cloud Storage and the backend.tf file for st
 ```
 cd terrafrom/test
 
-gsutil mb -l <region> -p ${TF_ADMIN} gs://${TF_ADMIN} # Ignore warning about AWS_CREDENTIAL_FILE
+gsutil mb -l europe-west3 -p ${TF_ADMIN} gs://${TF_ADMIN} # Ignore warning about AWS_CREDENTIAL_FILE
 
 cat > backend.tf <<EOF
 terraform {
@@ -110,13 +110,7 @@ EOF
 ## Initialize the backend:
 `terraform init` and check that everything works with `terraform plan`
 
-# Task 2: Use Terraform to create a new project
-
-## Export the following variables to your environment.
-```
-export TF_VAR_ssh_key=<your public ssh key>
-export TF_VAR_user=$USER
-```
+# Task 2: Create a new project
 
 ## Objectives
 * Organize your code into environments and modules
@@ -170,25 +164,21 @@ output "name" {
  value = "${google_project.project.name}"
 }
 
-output "region" {
- value = "${google_project.project.region}"
-}
 ```
 Terraform resources used:
   * [output "id"](https://www.terraform.io/intro/getting-started/outputs.html): The project ID is randomly generated for uniqueness. Use an output variable to display it after Terraform runs for later reference. The length of the project ID should not exceed 30 characters.
+  * [output "name"](https://www.terraform.io/intro/getting-started/outputs.html): The project name.
 
 `vars.tf`:
 ```
 variable "name" {}
+variable "region" {}
 variable "billing_account" {}
 variable "org_id" {}
-variable "region" {}
 ```
 
 ## Create your first environment: test
 
-Coming soon!
-<!--
 Create the following files in `test/`:
   * `main.tf`
   * `vars.tf`
@@ -197,21 +187,22 @@ Create the following files in `test/`:
 ```
 module "project" {
   source          = "../modules/project"
-  project_name    = "${var.project_name}"
+  name            = "hello-${var.env}"
+  region          = "${var.region}"
   billing_account = "${var.billing_account}"
   org_id          = "${var.org_id}"
-  region          = "${var.region}"
 }
+
 ```
 
 `vars.tf`:
 ```
-variable "project_name" { default = "hello-prod" }
+variable "env" { default = "test" }
+variable "region" { default = "europe-west3" }
 variable "billing_account" {}
 variable "org_id" {}
-variable "region" { default = "europe-west1" }
 ```
--->
+
 ## Initialize once again to download providers used in the module:
 `terraform init`
 
@@ -223,62 +214,69 @@ variable "region" { default = "europe-west1" }
 
 Verify your success in the GCP console 💰
 
----
-<!--
-The `compute.tf` file:
-```
-data "google_compute_zones" "available" {}
+# Task 3: Networking and bastion host
 
-resource "google_compute_instance" "default" {
- project = "${google_project_services.project.project}"
- zone = "${data.google_compute_zones.available.names[0]}"
- name = "tf-compute-1"
- machine_type = "f1-micro"
- boot_disk {
-   initialize_params {
-     image = "ubuntu-1604-xenial-v20170328"
-   }
- }
- network_interface {
-   network = "default"
-   access_config {
-   }
- }
+**Coming soon!**
+
+## Export the following variables to your environment.
+```
+export TF_VAR_ssh_key=<your public ssh key>
+export TF_VAR_user=$USER
+```
+
+## Create the `network` module
+
+**Coming soon!**
+
+Add the following to `test/main.tf`:
+```
+module "project" {
+  ...
 }
 
-output "instance_id" {
- value = "${google_compute_instance.default.self_link}"
+module "network" {
+  source                = "../modules/network"
+  name                  = "${module.project.name}"
+  project               = "${module.project.id}"
+  region                = "${var.region}"
+  zones                 = "${var.zones}"
+  cidr                  = "${var.cidr}"
+  private_subnets       = "${var.private_subnets}"
+  public_subnets        = "${var.public_subnets}"
+  bastion_image         = "${var.bastion_image}"
+  bastion_instance_type = "${var.bastion_instance_type}"
+  user                  = "${var.user}"
+  ssh_key               = "${var.ssh_key}"
 }
 ```
+
+`vars.tf`
+```
+...
+variable "zones" { default = ["europe-west3-a", "europe-west3-b"] }
+variable "cidr" { default = "192.168.0.0/16"}
+variable "private_subnets" { default = ["192.168.1.0/24", "192.168.2.0/24"] }
+variable "public_subnets" { default = ["192.168.100.0/24", "192.168.200.0/24"] }
+variable "bastion_image" { default = "centos-7-v20170918" }
+variable "bastion_instance_type" { default = "f1-micro" }
+variable "user" {}
+variable "ssh_key" {}
+```
+
+https://cloud.google.com/compute/docs/instances/connecting-to-instance#bastion_host
 
 Terraform resources used:
-* [data "google_compute_zones"](https://www.terraform.io/docs/providers/google/d/google_compute_zones.html): Data resource used to lookup available Compute Engine zones, bound to the desired region. Avoids hard-coding of zone names.
 * [resource "google_compute_instance"](https://www.terraform.io/docs/providers/google/r/compute_instance.html): The Compute Engine instance bound to the newly created project. Note that the project is referenced from the google_project_services.project resource. This is to tell Terraform to create it after the Compute Engine API has been enabled. Otherwise, Terraform would try to enable the Compute Engine API and create the instance at the same time, leading to an attempt to create the instance before the Compute Engine API is fully enabled.
 * [output "instance_id"](https://www.terraform.io/intro/getting-started/outputs.html): The self_link is output to make it easier to ssh into the instance after Terraform completes.
-
-Configure your environment for the Google Cloud Terraform provider:
-```
-export GOOGLE_CREDENTIALS=$(cat ${TF_CREDS})
-export GOOGLE_PROJECT=${TF_ADMIN}
-```
-
-Set the name of the project you want to create and the region you want to create the resources in:
-```
-export TF_VAR_project_name=${USER}-test-compute
-export TF_VAR_region=europe-west1
-```
-
-Preview the Terraform changes:
-`terraform plan`
 
 Apply the Terraform changes:
 `terraform apply`
 
 SSH into the instance created:
-`gcloud compute ssh $(terraform output | grep instance_id | cut -d = -f2)`
+`ssh -i ~/.ssh/<private_key> $USER@<public_ip>`
 
-Note that SSH may not work unless your organization user also has access to the newly created project resources.
--->
+# Task 5: Application
+
 
 # Cleaning up
 
