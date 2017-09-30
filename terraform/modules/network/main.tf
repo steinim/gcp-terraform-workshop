@@ -27,8 +27,8 @@ resource "google_compute_firewall" "allow-internal" {
   ]
 }
 
-resource "google_compute_firewall" "allow-ssh" {
-  name    = "${var.name}-allow-ssh"
+resource "google_compute_firewall" "allow-ssh-from-everywhere-to-bastion" {
+  name    = "${var.name}-allow-ssh-from-everywhere-to-bastion"
   project = "${var.project}"
   network = "${google_compute_network.network.name}"
 
@@ -40,6 +40,36 @@ resource "google_compute_firewall" "allow-ssh" {
   source_ranges = ["0.0.0.0/0"]
 
   target_tags = ["bastion"]
+}
+
+resource "google_compute_firewall" "allow-ssh-from-bastion-to-private-network" {
+  name               = "${var.name}-allow-ssh-from-bastion-to-private-network"
+  project            = "${var.project}"
+  network            = "${google_compute_network.network.name}"
+  direction          = "EGRESS"
+  destination_ranges = "${var.private_subnets}"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  target_tags        = ["private-subnets"]
+}
+
+resource "google_compute_firewall" "allow-ssh-to-private-network-from-bastion" {
+  name          = "${var.name}-allow-ssh-to-private-network-from-bastion"
+  project       = "${var.project}"
+  network       = "${google_compute_network.network.name}"
+  direction     = "INGRESS"
+  source_ranges = ["${module.bastion.private_ip}"]
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_tags   = ["bastion"]
 }
 
 module "public_subnet" {
