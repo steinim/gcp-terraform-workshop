@@ -127,7 +127,6 @@ Next, initialize the backend:
 ## Use Terraform to create a new project and Compute Engine instance
 
 The `project.tf` file:
-
 ```
 variable "project_name" {}
 variable "billing_account" {}
@@ -161,3 +160,74 @@ output "project_id" {
  value = "${google_project.project.project_id}"
 }
 ```
+
+Terraform resources used:
+  * [provider "google"](https://www.terraform.io/docs/providers/google/index.html): The Google cloud provider config. The credentials will be pulled from the GOOGLE_CREDENTIALS environment variable (set later in tutorial).
+  * [esource "random_id"](https://www.terraform.io/docs/providers/random/r/id.html): Project IDs must be unique. Generate a random one prefixed by the desired project ID.
+  * [esource "google_project"](https://www.terraform.io/docs/providers/google/r/google_project.html): The new project to create, bound to the desired organization ID and billing account.
+  * [esource "google_project_services"](https://www.terraform.io/docs/providers/google/r/google_project_services.html): Services and APIs enabled within the new project. Note that if you visit the web console after running Terraform, additional APIs may be implicitly enabled and Terraform would become out of sync. Re-running terraform plan will show you these changes before Terraform attempts to disable the APIs that were implicitly enabled. You can also set the full set of expected APIs beforehand to avoid the synchronization issue.
+  * output "project_id"(https://www.terraform.io/intro/getting-started/outputs.html): The project ID is randomly generated for uniqueness. Use an output variable to display it after Terraform runs for later reference. The length of the project ID should not exceed 30 characters.
+
+
+The `compute.tf` file:
+```
+data "google_compute_zones" "available" {}
+
+resource "google_compute_instance" "default" {
+ project = "${google_project_services.project.project}"
+ zone = "${data.google_compute_zones.available.names[0]}"
+ name = "tf-compute-1"
+ machine_type = "f1-micro"
+ boot_disk {
+   initialize_params {
+     image = "ubuntu-1604-xenial-v20170328"
+   }
+ }
+ network_interface {
+   network = "default"
+   access_config {
+   }
+ }
+}
+
+output "instance_id" {
+ value = "${google_compute_instance.default.self_link}"
+}
+```
+
+Terraform resources used:
+* [data "google_compute_zones"](https://www.terraform.io/docs/providers/google/d/google_compute_zones.html): Data resource used to lookup available Compute Engine zones, bound to the desired region. Avoids hard-coding of zone names.
+* [resource "google_compute_instance"](https://www.terraform.io/docs/providers/google/r/compute_instance.html): The Compute Engine instance bound to the newly created project. Note that the project is referenced from the google_project_services.project resource. This is to tell Terraform to create it after the Compute Engine API has been enabled. Otherwise, Terraform would try to enable the Compute Engine API and create the instance at the same time, leading to an attempt to create the instance before the Compute Engine API is fully enabled.
+* [output "instance_id"](https://www.terraform.io/intro/getting-started/outputs.html): The self_link is output to make it easier to ssh into the instance after Terraform completes.
+
+Configure your environment for the Google Cloud Terraform provider:
+```
+export GOOGLE_CREDENTIALS=$(cat ${TF_CREDS})
+export GOOGLE_PROJECT=${TF_ADMIN}
+```
+
+Set the name of the project you want to create and the region you want to create the resources in:
+```
+export TF_VAR_project_name=${USER}-test-compute
+export TF_VAR_region=us-central1
+```
+
+Preview the Terraform changes:
+`terraform plan`
+
+Apply the Terraform changes:
+`terraform apply`
+
+SSH into the instance created:
+`gcloud compute ssh $(terraform output | grep instance_id | cut -d = -f2)`
+
+Note that SSH may not work unless your organization user also has access to the newly created project resources.
+
+# Cleaning up
+
+First, destroy the resources created by Terraform:
+`terraform destroy`
+
+Finally, delete the Terraform Admin project and all of its resources:
+`gcloud projects delete ${TF_ADMIN}`
+
