@@ -108,7 +108,7 @@ Create the remote backend bucket in Cloud Storage and the backend.tf file for st
 ```
 cd terrafrom
 
-gsutil mb -p ${TF_ADMIN} gs://${TF_ADMIN}
+gsutil mb -p ${TF_ADMIN} gs://${TF_ADMIN} # Ignore warning about AWS_CREDENTIAL_FILE
 
 cat > backend.tf <<EOF
 terraform {
