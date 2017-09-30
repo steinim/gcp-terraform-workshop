@@ -1,7 +1,7 @@
 module "project" {
   source          = "../modules/project"
   name            = "hello-${var.env}"
-  region          = "europe-west1"
+  region          = "${var.region}"
   billing_account = "${var.billing_account}"
   org_id          = "${var.org_id}"
 }
@@ -10,7 +10,7 @@ module "network" {
   source                = "../modules/network"
   name                  = "${module.project.name}"
   project               = "${module.project.id}"
-  region                = "europe-west1"
+  region                = "${var.region}"
   zones                 = "${var.zones}"
   cidr                  = "${var.cidr}"
   private_subnets       = "${var.private_subnets}"
