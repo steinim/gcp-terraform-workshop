@@ -122,7 +122,7 @@ EOF
 
 Next, initialize the backend:
 
-`terraform init`
+`terraform init` and check that everything works with `terraform plan`
 
 ```
 
