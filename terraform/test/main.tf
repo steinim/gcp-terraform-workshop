@@ -19,6 +19,7 @@ module "network" {
   bastion_instance_type = "${var.bastion_instance_type}"
   user                  = "${var.user}"
   ssh_key               = "${var.ssh_key}"
+  db_ip                 = "${module.db.ip}"
 }
 
 module "application" {
@@ -32,4 +33,14 @@ module "application" {
   instance_type         = "${var.app_instance_type}"
   user                  = "${var.user}"
   ssh_key               = "${var.ssh_key}"
+}
+
+module "db" {
+  source               = "../modules/db"
+  name                 = "${module.project.name}"
+  region               = "${var.db_region}"
+  zones                = "${var.zones}"
+  project              = "${module.project.id}"
+  host                 = "${module.network.gateway_ipv4}"
+  tier                 = "${var.db_tier}"
 }

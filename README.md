@@ -5,9 +5,9 @@ In this tutorial you will learn how to use Terrafrom for provisioning basic infr
 
 ## Before you begin
 1. This tutorial assumes you already have a Cloud Platform account set up for your organization and that you are allowed to make organizational-level changes in the account.
-2. This tutorial assumes that you have the following tools installed.
-    * Terraform (`brew install terrafrom`)
-    * [Google Cloud SDK gcloud](https://cloud.google.com/sdk/docs/quickstart-mac-os-x) command-line tool
+2. Install Google Cloud SDK and Terraform.```brew update
+brew install Caskroom/cask/google-cloud-sdk
+brew install terraform```
 
 ### Costs
 Google Cloud Storage, Compute Engine and Cloud SQL are billable components.

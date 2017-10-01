@@ -23,5 +23,5 @@ resource "google_compute_instance" "app" {
     }
   }
 
-  tags = ["${var.name}-app-${count.index}"]
+  tags = ["${var.name}-app-${count.index}", "appserver"]
 }

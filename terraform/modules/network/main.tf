@@ -54,7 +54,7 @@ resource "google_compute_firewall" "allow-ssh-from-bastion-to-private-network" {
     ports    = ["22"]
   }
 
-  target_tags        = ["private-subnets"]
+  #target_tags        = ["private-subnets"]
 }
 
 resource "google_compute_firewall" "allow-ssh-to-private-network-from-bastion" {
@@ -62,7 +62,7 @@ resource "google_compute_firewall" "allow-ssh-to-private-network-from-bastion" {
   project       = "${var.project}"
   network       = "${google_compute_network.network.name}"
   direction     = "INGRESS"
-  source_ranges = ["${module.bastion.private_ip}"]
+  #source_ranges = ["${module.bastion.private_ip}"]
 
   allow {
     protocol = "tcp"
@@ -70,6 +70,34 @@ resource "google_compute_firewall" "allow-ssh-to-private-network-from-bastion" {
   }
 
   source_tags   = ["bastion"]
+}
+
+resource "google_compute_firewall" "allow-http-to-appservers" {
+  name          = "${var.name}-allow-http-to-appservers"
+  project       = "${var.project}"
+  network       = "${google_compute_network.network.name}"
+  direction     = "INGRESS"
+  #source_ranges = "${var.private_subnets}"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "1234"]
+  }
+
+  source_tags   = ["appserver"]
+}
+
+resource "google_compute_firewall" "allow-connection-to-db" {
+  name          = "${var.name}-allow-connection-to-db"
+  project       = "${var.project}"
+  network       = "${google_compute_network.network.name}"
+  direction     = "EGRESS"
+  destination_ranges = ["${var.db_ip}"]
+
+  allow {
+    protocol = "tcp"
+    ports    = ["3306"]
+  }
 }
 
 module "public_subnet" {
