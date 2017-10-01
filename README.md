@@ -18,9 +18,7 @@ Google Cloud Storage, Compute Engine and Cloud SQL are billable components.
 
 ## Architecture diagram for tutorial components:
 
-!! Architecture diagram goes here
-
-Figure 1. Architecture diagram for tutorial components architecture diagram
+![Architecture](https://github.com/steinim/gcp-terraform-workshop/raw/master/img/architecture.png)
 
 # Task 1: Set up the environment
 The setup is based on [Managing GCP Projects with Terraform](https://cloud.google.com/community/tutorials/managing-gcp-projects-with-terraform) by [Dan Isla](https://github.com/danisla), Google Cloud Solution Architect, Google
