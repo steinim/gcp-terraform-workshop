@@ -31,10 +31,16 @@ The setup is based on [Managing GCP Projects with Terraform](https://cloud.googl
 * Configure remote state in Google Cloud Storage (GCS).
 
 ## Export the following variables to your environment for use throughout the tutorial.
+
+Tip! Put the in `~/.gcp_env` and place `. ~/.gcp_env` in your `~/.bashrc`
+
 ```
+export GOOGLE_REGION=europe-west3 # change this if you want to use a different region
 export TF_VAR_org_id=<your_org_id>
 export TF_VAR_billing_account=<your_billing_account_id>
-export TF_VAR_region=europe-west3 # change this if you want to use a different region
+export TF_VAR_region=${GOOGLE_REGION}
+export TF_VAR_user=${USER}
+export TF_VAR_ssh_key=<path_to_your_public_ssh_key>
 export TF_ADMIN=${USER}-terraform-admin
 export TF_CREDS=~/.config/gcloud/terraform-admin.json
 ```
@@ -90,6 +96,9 @@ gcloud service-management enable cloudbilling.googleapis.com
 gcloud service-management enable iam.googleapis.com
 gcloud service-management enable compute.googleapis.com
 ```
+
+**NB!** Maybe you need to accept terms under [GCP Privacy & Security](https://console.cloud.google.com/iam-admin/privacy)
+
 ## Set up remote state in Cloud Storage
 
 Create the remote backend bucket in Cloud Storage and the backend.tf file for storage of the terraform.tfstate file:

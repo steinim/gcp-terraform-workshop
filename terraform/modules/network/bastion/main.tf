@@ -15,7 +15,7 @@ resource "google_compute_instance" "bastion" {
   }
 
   network_interface {
-    subnetwork = "${element(var.public_subnet_names, 0)}"
+    subnetwork = "${var.subnet_name}"
 
     access_config {
       # ephemeral

@@ -6,7 +6,7 @@ resource "google_compute_network" "network" {
 resource "google_compute_firewall" "allow-internal" {
   name    = "${var.name}-allow-internal"
   project = "${var.project}"
-  network = "${google_compute_network.network.name}"
+  network = "${var.name}-network"
 
   allow {
     protocol = "icmp"
@@ -23,14 +23,15 @@ resource "google_compute_firewall" "allow-internal" {
   }
 
   source_ranges = [
-    "${var.cidr}",
+    "${module.management_subnet.ip_range}",
+    "${module.webservers_subnet.ip_range}"
   ]
 }
 
 resource "google_compute_firewall" "allow-ssh-from-everywhere-to-bastion" {
   name    = "${var.name}-allow-ssh-from-everywhere-to-bastion"
   project = "${var.project}"
-  network = "${google_compute_network.network.name}"
+  network = "${var.name}-network"
 
   allow {
     protocol = "tcp"
@@ -42,27 +43,25 @@ resource "google_compute_firewall" "allow-ssh-from-everywhere-to-bastion" {
   target_tags = ["bastion"]
 }
 
-resource "google_compute_firewall" "allow-ssh-from-bastion-to-private-network" {
-  name               = "${var.name}-allow-ssh-from-bastion-to-private-network"
+resource "google_compute_firewall" "allow-ssh-from-bastion-to-webservers" {
+  name               = "${var.name}-allow-ssh-from-bastion-to-webservers"
   project            = "${var.project}"
-  network            = "${google_compute_network.network.name}"
+  network            = "${var.name}-network"
   direction          = "EGRESS"
-  destination_ranges = "${var.private_subnets}"
 
   allow {
     protocol = "tcp"
     ports    = ["22"]
   }
 
-  #target_tags        = ["private-subnets"]
+  target_tags        = ["http"]
 }
 
-resource "google_compute_firewall" "allow-ssh-to-private-network-from-bastion" {
+resource "google_compute_firewall" "allow-ssh-to-webservers-from-bastion" {
   name          = "${var.name}-allow-ssh-to-private-network-from-bastion"
   project       = "${var.project}"
-  network       = "${google_compute_network.network.name}"
+  network       = "${var.name}-network"
   direction     = "INGRESS"
-  #source_ranges = ["${module.bastion.private_ip}"]
 
   allow {
     protocol = "tcp"
@@ -75,57 +74,57 @@ resource "google_compute_firewall" "allow-ssh-to-private-network-from-bastion" {
 resource "google_compute_firewall" "allow-http-to-appservers" {
   name          = "${var.name}-allow-http-to-appservers"
   project       = "${var.project}"
-  network       = "${google_compute_network.network.name}"
-  direction     = "INGRESS"
-  #source_ranges = "${var.private_subnets}"
+  network       = "${var.name}-network"
 
   allow {
     protocol = "tcp"
-    ports    = ["80", "1234"]
+    ports    = ["80"]
   }
 
-  source_tags   = ["appserver"]
+  source_ranges = ["0.0.0.0/0"]
+
+  source_tags   = ["http"]
 }
 
-resource "google_compute_firewall" "allow-connection-to-db" {
-  name          = "${var.name}-allow-connection-to-db"
-  project       = "${var.project}"
-  network       = "${google_compute_network.network.name}"
-  direction     = "EGRESS"
-  destination_ranges = ["${var.db_ip}"]
+#resource "google_compute_firewall" "allow-connection-to-db" {
+#  name          = "${var.name}-allow-connection-to-db"
+#  project       = "${var.project}"
+#  network       = "${var.name}-network"
+#  direction     = "EGRESS"
+#  destination_ranges = ["${var.db_ip}"]
+#
+#  allow {
+#    protocol = "tcp"
+#    ports    = ["3306"]
+#  }
+#}
 
-  allow {
-    protocol = "tcp"
-    ports    = ["3306"]
-  }
+module "management_subnet" {
+  source   = "./subnet"
+  project  = "${var.project}"
+  region   = "${var.region}"
+  name     = "${var.management_subnet_name}"
+  network  = "${google_compute_network.network.self_link}"
+  ip_range = "${var.management_subnet_ip_range}"
 }
 
-module "public_subnet" {
-  source = "./public_subnet"
-  project = "${var.project}"
-  name    = "${var.name}-public"
-  region  = "${var.region}"
-  network = "${google_compute_network.network.self_link}"
-  cidrs   = "${var.public_subnets}"
-}
-
-module "private_subnet" {
-  source  = "./private_subnet"
-  project = "${var.project}"
-  name    = "${var.name}-private"
-  region  = "${var.region}"
-  network = "${google_compute_network.network.self_link}"
-  cidrs   = "${var.private_subnets}"
+module "webservers_subnet" {
+  source   = "./subnet"
+  project  = "${var.project}"
+  region   = "${var.region}"
+  name     = "${var.webservers_subnet_name}"
+  network  = "${google_compute_network.network.self_link}"
+  ip_range = "${var.webservers_subnet_ip_range}"
 }
 
 module "bastion" {
-  source              = "./bastion"
-  project             = "${var.project}"
-  name                = "${var.name}-bastion"
-  zones               = "${var.zones}"
-  public_subnet_names = "${module.public_subnet.subnet_names}"
-  image               = "${var.bastion_image}"
-  instance_type       = "${var.bastion_instance_type}"
-  user                = "${var.user}"
-  ssh_key             = "${var.ssh_key}"
+  source        = "./bastion"
+  name          = "${var.name}-bastion"
+  project       = "${var.project}"
+  zones         = "${var.zones}"
+  subnet_name   = "${module.management_subnet.name}"
+  image         = "${var.bastion_image}"
+  instance_type = "${var.bastion_instance_type}"
+  user          = "${var.user}"
+  ssh_key       = "${var.ssh_key}"
 }
