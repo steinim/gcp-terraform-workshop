@@ -18,7 +18,7 @@ resource "google_compute_instance" "bastion" {
     subnetwork = "${var.subnet_name}"
 
     access_config {
-      # ephemeral
+      # Ephemeral IP - leaving this block empty will generate a new external IP and assign it to the machine
     }
   }
 
