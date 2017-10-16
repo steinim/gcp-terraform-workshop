@@ -42,7 +42,6 @@ module "lb" {
   project           = "${module.project.id}"
   region            = "${var.region}"
   count             = "${var.appserver_count}"
-  #instances         = "${module.instance-template.instances}"
   instance_template = "${module.instance-template.instance_template}"
   zones             = "${var.zones}"
 }

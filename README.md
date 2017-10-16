@@ -1,7 +1,7 @@
 # gcp-terraform-workshop
 Introduction to provisioning basic infrastructure on Google Cloud Platform with Terraform.
 
-In this tutorial you will learn how to use Terrafrom for provisioning basic infrastructure on the Google Cloud Platform (GCP), including projects, Identity and Access Management (IAM) policies, networking and deployment of a demo application on Container Engine.
+In this tutorial you will learn how to use Terraform for provisioning basic infrastructure on the Google Cloud Platform (GCP), including projects, networking and deployment of webservers on Compute Engine in an autoscaled and load balanced environment. Further work includes setting up a Cloud SQL database and deployment of a Java application with a reverse proxy in front.
 
 ## Before you begin
 1. This tutorial assumes you already have a Cloud Platform account set up for your organization and that you are allowed to make organizational-level changes in the account.
@@ -17,8 +17,6 @@ Google Cloud Storage, Compute Engine and Cloud SQL are billable components.
 
 ## Objectives
 
-* ...
-
 ## Architecture diagram for tutorial components:
 
 ![Architecture](https://github.com/steinim/gcp-terraform-workshop/raw/master/img/architecture.png)
@@ -32,7 +30,7 @@ The setup is based on [Managing GCP Projects with Terraform](https://cloud.googl
 
 ## Export the following variables to your environment for use throughout the tutorial.
 
-Tip! Put the in `~/.gcp_env` and place `. ~/.gcp_env` in your `~/.bashrc`
+Tip! Put the exports in `~/.gcp_env` and place `. ~/.gcp_env` in your `~/.bashrc`
 
 ```
 export GOOGLE_REGION=europe-west3 # change this if you want to use a different region
