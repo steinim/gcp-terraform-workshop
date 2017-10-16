@@ -11,6 +11,7 @@ In this tutorial you will learn how to use Terraform for provisioning basic infr
   brew install Caskroom/cask/google-cloud-sdk
   brew install terraform
   ```
+3. Fork this repo
 
 ### Costs
 Google Cloud Storage, Compute Engine and Cloud SQL are billable components.
@@ -171,7 +172,6 @@ output "id" {
 output "name" {
  value = "${google_project.project.name}"
 }
-
 ```
 Terraform resources used:
   * [output "id"](https://www.terraform.io/intro/getting-started/outputs.html): The project ID is randomly generated for uniqueness. Use an output variable to display it after Terraform runs for later reference. The length of the project ID should not exceed 30 characters.
@@ -200,7 +200,6 @@ module "project" {
   billing_account = "${var.billing_account}"
   org_id          = "${var.org_id}"
 }
-
 ```
 
 `vars.tf`:
@@ -224,67 +223,26 @@ Verify your success in the GCP console 💰
 
 # Task 3: Networking and bastion host
 
-**Coming soon!**
+`git checkout task3`
 
-## Export the following variables to your environment.
-```
-export TF_VAR_ssh_key=<your public ssh key>
-export TF_VAR_user=$USER
-```
-
-## Create the `network` module
-
-**Coming soon!**
-
-Add the following to `test/main.tf`:
-```
-module "project" {
-  ...
-}
-
-module "network" {
-  source                = "../modules/network"
-  name                  = "${module.project.name}"
-  project               = "${module.project.id}"
-  region                = "${var.region}"
-  zones                 = "${var.zones}"
-  cidr                  = "${var.cidr}"
-  private_subnets       = "${var.private_subnets}"
-  public_subnets        = "${var.public_subnets}"
-  bastion_image         = "${var.bastion_image}"
-  bastion_instance_type = "${var.bastion_instance_type}"
-  user                  = "${var.user}"
-  ssh_key               = "${var.ssh_key}"
-}
-```
-
-`vars.tf`
-```
-...
-variable "zones" { default = ["europe-west3-a", "europe-west3-b"] }
-variable "cidr" { default = "192.168.0.0/16"}
-variable "private_subnets" { default = ["192.168.1.0/24", "192.168.2.0/24"] }
-variable "public_subnets" { default = ["192.168.100.0/24", "192.168.200.0/24"] }
-variable "bastion_image" { default = "centos-7-v20170918" }
-variable "bastion_instance_type" { default = "f1-micro" }
-variable "user" {}
-variable "ssh_key" {}
-```
-
-https://cloud.google.com/compute/docs/instances/connecting-to-instance#bastion_host
-
-Terraform resources used:
-* [resource "google_compute_instance"](https://www.terraform.io/docs/providers/google/r/compute_instance.html): The Compute Engine instance bound to the newly created project. Note that the project is referenced from the google_project_services.project resource. This is to tell Terraform to create it after the Compute Engine API has been enabled. Otherwise, Terraform would try to enable the Compute Engine API and create the instance at the same time, leading to an attempt to create the instance before the Compute Engine API is fully enabled.
-* [output "instance_id"](https://www.terraform.io/intro/getting-started/outputs.html): The self_link is output to make it easier to ssh into the instance after Terraform completes.
-
-Apply the Terraform changes:
-`terraform apply`
-
-SSH into the instance created:
+SSH into the bastion host:
 `ssh -i ~/.ssh/<private_key> $USER@<public_ip>`
 
-# Task 5: Application
+# Task 4: Instance templates
 
+`git checkout task4`
+
+# Task 5: Auto scaling and load balancing
+
+`git checkout task5`
+
+# (Task 6: Java application and reverse proxy)
+
+You're on your own!
+
+# (Task 7: Database)
+
+You're on your own!
 
 # Cleaning up
 
