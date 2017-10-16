@@ -16,8 +16,6 @@ In this tutorial you will learn how to use Terraform for provisioning basic infr
 ### Costs
 Google Cloud Storage, Compute Engine and Cloud SQL are billable components.
 
-## Objectives
-
 ## Architecture diagram for tutorial components:
 
 ![Architecture](https://github.com/steinim/gcp-terraform-workshop/raw/master/img/architecture.png)
