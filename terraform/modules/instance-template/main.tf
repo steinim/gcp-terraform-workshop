@@ -1,25 +1,22 @@
-resource "google_compute_instance" "webserver" {
-
-  count         = "${var.count}"
-
-  name         = "${var.name}-webserver-${count.index}"
+resource "google_compute_instance_template" "webserver" {
+  name         = "${var.name}-webserver-instance-template"
   project      = "${var.project}"
   machine_type = "${var.instance_type}"
-  zone         = "${element(var.zones, count.index)}"
+  region       = "${var.region}"
 
   metadata {
     ssh-keys = "${var.user}:${file("${var.ssh_key}")}"
   }
 
-  boot_disk {
-    initialize_params {
-      image = "${var.image}"
-    }
+  disk {
+    source_image = "${var.image}"
+    auto_delete  = true
+    boot         = true
   }
 
   network_interface {
-    subnetwork = "${var.subnet_name}"
-
+    subnetwork         = "${var.subnet_name}"
+    subnetwork_project = "${var.project}"
     access_config {
       # Ephemeral IP - leaving this block empty will generate a new external IP and assign it to the machine
     }
@@ -28,5 +25,9 @@ resource "google_compute_instance" "webserver" {
   metadata_startup_script = "yum install -y nginx ; service nginx start"
 
   tags = ["http"]
+
+  labels = {
+    environment = "${var.env}"
+  }
 }
 
