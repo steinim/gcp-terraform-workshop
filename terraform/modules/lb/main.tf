@@ -20,8 +20,6 @@ resource "google_compute_url_map" "url_map" {
 resource "google_compute_backend_service" "backend_service" {
   name                  = "${var.name}-backend-service"
   project               = "${var.project}"
-  #count                 = "${var.count}"
-  #region               = "${var.region}"
   port_name             = "http"
   protocol              = "HTTP"
   backend {
@@ -40,12 +38,10 @@ resource "google_compute_backend_service" "backend_service" {
 }
 
 resource "google_compute_http_health_check" "healthcheck" {
-  name                = "${var.name}-healthcheck"
-  project             = "${var.project}"
-  port                = 80
-  request_path        = "/"
-  #check_interval_sec  = 1
-  #timeout_sec         = 1
+  name         = "${var.name}-healthcheck"
+  project      = "${var.project}"
+  port         = 80
+  request_path = "/"
 }
 
 resource "google_compute_instance_group_manager" "webservers" {
@@ -55,8 +51,6 @@ resource "google_compute_instance_group_manager" "webservers" {
   base_instance_name = "${var.name}-webserver-instance"
   count              = "${var.count}"
   zone               = "${element(var.zones, count.index)}"
-  #region             = "${var.region}"
-  #target_size        = "1"
   target_pools       = [ "${google_compute_target_pool.webserver.self_link}" ]
   named_port {
     name = "http"
@@ -67,23 +61,14 @@ resource "google_compute_instance_group_manager" "webservers" {
 resource "google_compute_target_pool" "webserver" {
   name          = "${var.name}-instance-pool"
   project       = "${var.project}"
-  #region        = "${var.region}"
-  #instances     = [ "${var.instances}" ]
   health_checks = [ "${google_compute_http_health_check.healthcheck.name}" ]
 }
 
 resource "google_compute_instance_group" "webservers" {
-  name      = "${var.name}-webservers-instance-group-${count.index}"
-  project   = "${var.project}"
-  count     = "${var.count}"
-#  instances = [ "${element(var.instances, count.index)}" ]
-#
-#  named_port {
-#    name = "http"
-#    port = "80"
-#  }
-#
-  zone = "${element(var.zones, count.index)}"
+  name    = "${var.name}-webservers-instance-group-${count.index}"
+  project = "${var.project}"
+  count   = "${var.count}"
+  zone    = "${element(var.zones, count.index)}"
 }
 
 resource "google_compute_autoscaler" "autoscaler" {
