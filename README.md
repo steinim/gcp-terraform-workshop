@@ -232,9 +232,19 @@ SSH into the bastion host:
 
 `git checkout task4`
 
+SSH into the bastion host with ssh-agent forwarding and ssh to a webserver in the private network:
+```
+ssh -A -i ~/.ssh/<private_key> $USER@<public_ip>
+ssh <instance_private_ip
+```
+
+Browse to the public ip's of the webservers.
+
 # Task 5: Auto scaling and load balancing
 
 `git checkout task5`
+
+Browse to the public ip of the load balancer.
 
 # (Task 6: Java application and reverse proxy)
 
