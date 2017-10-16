@@ -12,6 +12,7 @@ In this tutorial you will learn how to use Terraform for provisioning basic infr
   brew install terraform
   ```
 3. Fork this repo
+4. Check out the `start` branch: `git checkout start`
 
 ### Costs
 Google Cloud Storage, Compute Engine and Cloud SQL are billable components.
