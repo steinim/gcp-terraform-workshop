@@ -15,7 +15,7 @@ module "network" {
   webservers_subnet_name     = "webservers"
   webservers_subnet_ip_range = "${var.webservers_subnet_ip_range}"
   management_subnet_name     = "management"
- management_subnet_ip_range = "${var.management_subnet_ip_range}"
+  management_subnet_ip_range = "${var.management_subnet_ip_range}"
   bastion_image              = "${var.bastion_image}"
   bastion_instance_type      = "${var.bastion_instance_type}"
   user                       = "${var.user}"
@@ -29,11 +29,20 @@ module "webserver" {
   project               = "${module.project.id}"
   count                 = "${var.appserver_count}"
   zones                 = "${var.zones}"
- subnet_name           = "${module.network.management_subnet_name}"
+  subnet_name           = "${module.network.management_subnet_name}"
   image                 = "${var.app_image}"
   instance_type         = "${var.app_instance_type}"
- user                  = "${var.user}"
+  user                  = "${var.user}"
   ssh_key               = "${var.ssh_key}"
+}
+
+module "lb" {
+  source                = "../modules/lb"
+  name                  = "${module.project.name}"
+  project               = "${module.project.id}"
+  count                 = "${var.appserver_count}"
+  instances             = "${module.webserver.instances}"
+  zones                 = "${var.zones}"
 }
 
 #module "db" {
