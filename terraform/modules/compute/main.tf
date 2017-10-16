@@ -25,6 +25,8 @@ resource "google_compute_instance" "webserver" {
     }
   }
 
+  metadata_startup_script = "yum install -y nginx ; service nginx start"
+
   tags = ["http"]
 }
 
