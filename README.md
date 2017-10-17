@@ -226,12 +226,6 @@ Verify your success in the GCP console 💰
 
 ## Create the network module
 
-<p>
-<details>
-<summary><strong>
-Directory layout
-</strong></summary>
-
 ```
 network/
 ├── vars.tf
@@ -246,15 +240,12 @@ network/
 │   ├── outputs.tf
 │   └── vars.tf
 ```
-</details>
-</p>
 
 <p>
 <details>
-<summary><strong>
-`network/subnet/main.tf`
-</strong></summary>
+<summary><strong>Subnet module</strong> `network/subnet</summary>
 ```
+# main.tf
 resource "google_compute_subnetwork" "subnet" {
   name          = "${var.name}"
   project       = "${var.project}"
@@ -263,15 +254,32 @@ resource "google_compute_subnetwork" "subnet" {
   ip_cidr_range = "${var.ip_range}"
 }
 ```
+```
+# vars.tf
+variable "name" {}
+variable "project" {}
+variable "region" {}
+variable "network" {}
+variable "ip_range" {}
+```
+```
+# outputs.tf
+output "name" {
+  value = "${google_compute_subnetwork.subnet.name}"
+}
+output "ip_range" {
+  value = "${google_compute_subnetwork.subnet.ip_cidr_range}"
+}
+
+```
 </details>
 </p>
 
 <p>
 <details>
-<summary><strong>
-`network/subnet/bastion.tf`
-</strong></summary>
+<summary><strong>Bastion host module</strong> `network/bastion`</summary>
 ```
+# main.tf
 resource "google_compute_instance" "bastion" {
   name         = "${var.name}"
   project      = "${var.project}"
@@ -295,21 +303,39 @@ resource "google_compute_instance" "bastion" {
       # Ephemeral IP - leaving this block empty will generate a new external IP and assign it to the machine
     }
   }
+
   tags = ["bastion"]
 }
-
+```
+```
+# vars.tf
+variable "name" {}
+variable "project" {}
+variable "zones" { type = "list" }
+variable "subnet_name" {}
+variable "image" {}
+variable "instance_type" {}
+variable "user" {}
+variable "ssh_key" {}
+```
+```
+# outputs.tf
+output "private_ip" {
+  value = "${google_compute_instance.bastion.network_interface.0.address}"
+}
+output "public_ip" {
+  value = "${google_compute_instance.bastion.network_interface.0.access_config.0.assigned_nat_ip}"
+}
 ```
 </details>
 </p>
 
-
 <p>
 <details>
-<summary><strong>
-`network/main.tf
-</strong></summary>
+<summary><strong>Network</strong>`network/`</summary>
 
 ```
+# main.tf
 resource "google_compute_network" "network" {
   name    = "${var.name}-network"
   project = "${var.project}"
@@ -427,7 +453,39 @@ module "bastion" {
   user          = "${var.user}"
   ssh_key       = "${var.ssh_key}"
 }
-
+```
+```
+# vars.tf
+variable "name" {}
+variable "project" {}
+variable "region" {}
+variable "zones" { type = "list" }
+variable "webservers_subnet_name" {}
+variable "webservers_subnet_ip_range" {}
+variable "management_subnet_name" {}
+variable "management_subnet_ip_range" {}
+variable "bastion_image" {}
+variable "bastion_instance_type" {}
+variable "user" {}
+variable "ssh_key" {}
+```
+```
+# outputs.tf
+output "name" {
+  value = "${google_compute_network.network.name}"
+}
+output "management_subnet_name" {
+  value = "${module.management_subnet.name}"
+}
+output "webservers_subnet_names" {
+  value = "${module.management_subnet.name}"
+}
+output "bastion_public_ip" {
+  value = "${module.bastion.public_ip}"
+}
+output "gateway_ipv4"  {
+  value = "${google_compute_network.network.gateway_ipv4}"
+}
 ```
 </details>
 </p>
