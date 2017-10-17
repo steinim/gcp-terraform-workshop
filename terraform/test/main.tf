@@ -21,3 +21,16 @@ module "network" {
   user                       = "${var.user}"
   ssh_key                    = "${var.ssh_key}"
 }
+
+module "instance-template" {
+  source        = "../modules/instance-template"
+  name          = "${module.project.name}"
+  env           = "${var.env}"
+  project       = "${module.project.id}"
+  region        = "${var.region}"
+  subnet_name   = "${module.network.management_subnet_name}"
+  image         = "${var.app_image}"
+  instance_type = "${var.app_instance_type}"
+  user          = "${var.user}"
+  ssh_key       = "${var.ssh_key}"
+}
