@@ -850,6 +850,13 @@ module "lb" {
 </details>
 </p>
 
+## Init, plan, apply!
+```
+terraform init
+terraform plan
+terraform apply
+```
+
 ## Browse to the public ip of the load balancer 💰
 
 💰💰💰
@@ -866,7 +873,7 @@ You're on your own!
 # Cleaning up
 
 First, destroy the resources created by Terraform:
-`terraform destroy`
+`terraform destroy --force`
 
 Finally, delete the Terraform Admin project and all of its resources:
 `gcloud projects delete ${TF_ADMIN}`
