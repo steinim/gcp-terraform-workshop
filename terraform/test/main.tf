@@ -34,3 +34,13 @@ module "instance-template" {
   user          = "${var.user}"
   ssh_key       = "${var.ssh_key}"
 }
+
+module "lb" {
+  source            = "../modules/lb"
+  name              = "${module.project.name}"
+  project           = "${module.project.id}"
+  region            = "${var.region}"
+  count             = "${var.appserver_count}"
+  instance_template = "${module.instance-template.instance_template}"
+  zones             = "${var.zones}"
+}
