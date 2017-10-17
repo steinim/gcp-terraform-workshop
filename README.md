@@ -244,6 +244,7 @@ network/
 <p>
 <details>
 <summary><strong>Subnet module</strong> `network/subnet</summary>
+
 ```
 # main.tf
 resource "google_compute_subnetwork" "subnet" {
@@ -253,16 +254,18 @@ resource "google_compute_subnetwork" "subnet" {
   network       = "${var.network}"
   ip_cidr_range = "${var.ip_range}"
 }
-```
-```
+
+---
+
 # vars.tf
 variable "name" {}
 variable "project" {}
 variable "region" {}
 variable "network" {}
 variable "ip_range" {}
-```
-```
+
+---
+
 # outputs.tf
 output "name" {
   value = "${google_compute_subnetwork.subnet.name}"
@@ -277,7 +280,8 @@ output "ip_range" {
 
 <p>
 <details>
-<summary><strong>Bastion host module</strong> `network/bastion`</summary>
+<summary><strong>Bastion host module</strong>`network/bastion`</summary>
+
 ```
 # main.tf
 resource "google_compute_instance" "bastion" {
@@ -306,8 +310,9 @@ resource "google_compute_instance" "bastion" {
 
   tags = ["bastion"]
 }
-```
-```
+
+---
+
 # vars.tf
 variable "name" {}
 variable "project" {}
@@ -317,8 +322,9 @@ variable "image" {}
 variable "instance_type" {}
 variable "user" {}
 variable "ssh_key" {}
-```
-```
+
+---
+
 # outputs.tf
 output "private_ip" {
   value = "${google_compute_instance.bastion.network_interface.0.address}"
@@ -453,8 +459,9 @@ module "bastion" {
   user          = "${var.user}"
   ssh_key       = "${var.ssh_key}"
 }
-```
-```
+
+---
+
 # vars.tf
 variable "name" {}
 variable "project" {}
@@ -468,8 +475,9 @@ variable "bastion_image" {}
 variable "bastion_instance_type" {}
 variable "user" {}
 variable "ssh_key" {}
-```
-```
+
+---
+
 # outputs.tf
 output "name" {
   value = "${google_compute_network.network.name}"
