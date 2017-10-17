@@ -597,7 +597,7 @@ resource "google_compute_instance_template" "webserver" {
     }
   }
 
-  metadata_startup_script = "yum install -y nginx ; service nginx start"
+  metadata_startup_script = "yum install -y nginx ; service nginx start ; hostname > /usr/share/nginx/html/index.html"
 
   tags = ["http"]
 
@@ -712,7 +712,6 @@ modules/lb
 ```
 
 # main.tf
-
 resource "google_compute_global_forwarding_rule" "global_forwarding_rule" {
   name       = "${var.name}-global-forwarding-rule"
   project    = "${var.project}"
@@ -738,13 +737,13 @@ resource "google_compute_backend_service" "backend_service" {
   port_name             = "http"
   protocol              = "HTTP"
   backend {
-    group                 = "${element(google_compute_instance_group.webservers.*.self_link, 0)}"
+    group                 = "${element(google_compute_instance_group_manager.webservers.*.instance_group, 0)}"
     balancing_mode        = "RATE"
     max_rate_per_instance = 100
   }
 
   backend {
-    group                 = "${element(google_compute_instance_group.webservers.*.self_link, 1)}"
+    group                 = "${element(google_compute_instance_group_manager.webservers.*.instance_group, 1)}"
     balancing_mode        = "RATE"
     max_rate_per_instance = 100
   }
@@ -760,34 +759,20 @@ resource "google_compute_http_health_check" "healthcheck" {
 }
 
 resource "google_compute_instance_group_manager" "webservers" {
-  name               = "${var.name}-instance-group-manager-${var.count}"
+  name               = "${var.name}-instance-group-manager-${count.index}"
   project            = "${var.project}"
   instance_template  = "${var.instance_template}"
   base_instance_name = "${var.name}-webserver-instance"
   count              = "${var.count}"
   zone               = "${element(var.zones, count.index)}"
-  target_pools       = [ "${google_compute_target_pool.webserver.self_link}" ]
   named_port {
     name = "http"
     port = 80
   }
 }
 
-resource "google_compute_target_pool" "webserver" {
-  name          = "${var.name}-instance-pool"
-  project       = "${var.project}"
-  health_checks = [ "${google_compute_http_health_check.healthcheck.name}" ]
-}
-
-resource "google_compute_instance_group" "webservers" {
-  name    = "${var.name}-webservers-instance-group-${count.index}"
-  project = "${var.project}"
-  count   = "${var.count}"
-  zone    = "${element(var.zones, count.index)}"
-}
-
 resource "google_compute_autoscaler" "autoscaler" {
-  name    = "${var.name}-scaler"
+  name    = "${var.name}-scaler-${count.index}"
   project = "${var.project}"
   count   = "${var.count}"
   zone    = "${element(var.zones, count.index)}"
