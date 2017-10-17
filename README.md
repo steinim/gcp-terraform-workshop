@@ -13,6 +13,7 @@ In this tutorial you will learn how to use Terraform for provisioning basic infr
   ```
 3. Fork this repo
 4. Check out the `start` branch: `git checkout start`
+5. Open [the Terraform doc for GCP](https://www.terraform.io/docs/providers/google/)
 
 ### Costs
 Google Cloud Storage, Compute Engine and Cloud SQL are billable components.
@@ -25,7 +26,7 @@ Google Cloud Storage, Compute Engine and Cloud SQL are billable components.
 The setup is based on [Managing GCP Projects with Terraform](https://cloud.google.com/community/tutorials/managing-gcp-projects-with-terraform) by [Dan Isla](https://github.com/danisla), Google Cloud Solution Architect, Google
 
 ## Objectives
-* Create a Terraform Admin Project for the service account and a remote state bucket.
+* Create a Terraform admin project for the service account and a remote state bucket.
 * Configure remote state in Google Cloud Storage (GCS).
 
 ## Export the following variables to your environment for use throughout the tutorial.
@@ -243,7 +244,7 @@ network/
 
 <p>
 <details>
-<summary><strong>Subnet module</strong> `network/subnet</summary>
+<summary><strong>Subnet module</strong> `network/subnet`</summary>
 
 ```
 # main.tf
@@ -498,14 +499,56 @@ output "gateway_ipv4"  {
 </details>
 </p>
 
-## SSH into the bastion host:
+<p>
+<details>
+<summary><strong>Use the subnet module in your main project</strong> `test/`</summary>
+```
+# main.tf
+...
+module "network" {
+  source                     = "../modules/network"
+  name                       = "${module.project.name}"
+  project                    = "${module.project.id}"
+  region                     = "${var.region}"
+  zones                      = "${var.zones}"
+  webservers_subnet_name     = "webservers"
+  webservers_subnet_ip_range = "${var.webservers_subnet_ip_range}"
+  management_subnet_name     = "management"
+  management_subnet_ip_range = "${var.management_subnet_ip_range}"
+  bastion_image              = "${var.bastion_image}"
+  bastion_instance_type      = "${var.bastion_instance_type}"
+  user                       = "${var.user}"
+  ssh_key                    = "${var.ssh_key}"
+}
+
+---
+
+# vars.tf
+...
+variable "zones" { default = ["europe-west3-a", "europe-west3-b"] }
+variable "webservers_subnet_ip_range" { default = "192.168.1.0/24"}
+variable "management_subnet_ip_range" { default = "192.168.100.0/24"}
+variable "bastion_image" { default = "centos-7-v20170918" }
+variable "bastion_instance_type" { default = "f1-micro" }
+variable "user" {}
+variable "ssh_key" {}
+```
+</details>
+</p>
+
+## Init, plan, apply!
+`terraform init`
+`terraform plan`
+`terraform apply`
+
+## SSH into the bastion host 💰
 `ssh -i ~/.ssh/<private_key> $USER@<public_ip>`
 
 # Task 4: Instance templates
 
 `git checkout task4`
 
-SSH into the bastion host with ssh-agent forwarding and ssh to a webserver in the private network:
+SSH into the bastion host with ssh-agent forwarding and ssh to a webserver in the private network 💰
 ```
 ssh -A -i ~/.ssh/<private_key> $USER@<public_ip>
 ssh <instance_private_ip
