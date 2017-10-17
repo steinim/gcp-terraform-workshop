@@ -127,6 +127,13 @@ EOF
 * Use Terraform to provision a new project
 
 ## Create your first module: `project`
+
+Terraform resources used:
+  * [provider "google"](https://www.terraform.io/docs/providers/google/index.html)
+  * [resource "random_id"](https://www.terraform.io/docs/providers/random/r/id.html): Project IDs must be unique. Generate a random one prefixed by the desired project ID.
+  * [resource "google_project"](https://www.terraform.io/docs/providers/google/r/google_project.html): The new project to create, bound to the desired organization ID and billing account.
+  * [resource "google_project_services"](https://www.terraform.io/docs/providers/google/r/google_project_services.html): Services and APIs enabled within the new project.
+
 Create the following files in `modules/project/`:
   * `main.tf`
   * `vars.tf`
@@ -157,11 +164,6 @@ resource "google_project_services" "project" {
  ]
 }
 ```
-Terraform resources used:
-  * [provider "google"](https://www.terraform.io/docs/providers/google/index.html): The Google cloud provider config. The credentials will be pulled from the GOOGLE_CREDENTIALS environment variable (set later in tutorial).
-  * [resource "random_id"](https://www.terraform.io/docs/providers/random/r/id.html): Project IDs must be unique. Generate a random one prefixed by the desired project ID.
-  * [resource "google_project"](https://www.terraform.io/docs/providers/google/r/google_project.html): The new project to create, bound to the desired organization ID and billing account.
-  * [resource "google_project_services"](https://www.terraform.io/docs/providers/google/r/google_project_services.html): Services and APIs enabled within the new project. Note that if you visit the web console after running Terraform, additional APIs may be implicitly enabled and Terraform would become out of sync. Re-running terraform plan will show you these changes before Terraform attempts to disable the APIs that were implicitly enabled. You can also set the full set of expected APIs beforehand to avoid the synchronization issue.
 
 `outputs.tf`:
 ```
@@ -502,9 +504,12 @@ output "gateway_ipv4"  {
 <p>
 <details>
 <summary><strong>Use the subnet module in your main project</strong> `test/`</summary>
+
 ```
 # main.tf
+
 ...
+
 module "network" {
   source                     = "../modules/network"
   name                       = "${module.project.name}"
@@ -532,7 +537,9 @@ variable "bastion_image" { default = "centos-7-v20170918" }
 variable "bastion_instance_type" { default = "f1-micro" }
 variable "user" {}
 variable "ssh_key" {}
+
 ```
+
 </details>
 </p>
 
