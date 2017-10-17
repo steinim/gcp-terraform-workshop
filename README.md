@@ -677,11 +677,7 @@ terraform plan
 terraform apply
 ```
 
-## SSH into the bastion host with ssh-agent forwarding and ssh to a webserver in the private network 💰
-```
-ssh -A -i ~/.ssh/<private_key> $USER@<public_ip>
-ssh <instance_private_ip
-```
+## Check that your instance template is created in the console 💰
 
 Browse to the public ip's of the webservers.
 
@@ -855,6 +851,12 @@ module "lb" {
 terraform init
 terraform plan
 terraform apply
+```
+
+## SSH into the bastion host with ssh-agent forwarding and ssh to a webserver in the private network 💰
+```
+ssh -A -i ~/.ssh/<private_key> $USER@<public_ip>
+ssh <instance_private_ip
 ```
 
 ## Browse to the public ip of the load balancer 💰
