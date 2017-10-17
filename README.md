@@ -224,7 +224,215 @@ Verify your success in the GCP console 💰
 
 `git checkout task3`
 
-SSH into the bastion host:
+## Create the network module
+
+<p>
+<details>
+<summary><strong>
+Directory layout
+</strong></summary>
+
+```
+network/
+├── vars.tf
+├── main.tf
+├── outputs.tf
+├── bastion
+│   ├── main.tf
+│   ├── outputs.tf
+│   └── vars.tf
+├── subnet
+│   ├── main.tf
+│   ├── outputs.tf
+│   └── vars.tf
+```
+</details>
+</p>
+
+<p>
+<details>
+<summary><strong>
+`network/subnet/main.tf`
+</strong></summary>
+```
+resource "google_compute_subnetwork" "subnet" {
+  name          = "${var.name}"
+  project       = "${var.project}"
+  region        = "${var.region}"
+  network       = "${var.network}"
+  ip_cidr_range = "${var.ip_range}"
+}
+```
+</details>
+</p>
+
+<p>
+<details>
+<summary><strong>
+`network/subnet/bastion.tf`
+</strong></summary>
+```
+resource "google_compute_instance" "bastion" {
+  name         = "${var.name}"
+  project      = "${var.project}"
+  machine_type = "${var.instance_type}"
+  zone         = "${element(var.zones, 0)}"
+
+  metadata {
+    ssh-keys = "${var.user}:${file("${var.ssh_key}")}"
+  }
+
+  boot_disk {
+    initialize_params {
+      image = "${var.image}"
+    }
+  }
+
+  network_interface {
+    subnetwork = "${var.subnet_name}"
+
+    access_config {
+      # Ephemeral IP - leaving this block empty will generate a new external IP and assign it to the machine
+    }
+  }
+  tags = ["bastion"]
+}
+
+```
+</details>
+</p>
+
+
+<p>
+<details>
+<summary><strong>
+`network/main.tf
+</strong></summary>
+
+```
+resource "google_compute_network" "network" {
+  name    = "${var.name}-network"
+  project = "${var.project}"
+}
+
+resource "google_compute_firewall" "allow-internal" {
+  name    = "${var.name}-allow-internal"
+  project = "${var.project}"
+  network = "${var.name}-network"
+
+  allow {
+    protocol = "icmp"
+  }
+
+  allow {
+    protocol = "tcp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "udp"
+    ports    = ["0-65535"]
+  }
+
+  source_ranges = [
+    "${module.management_subnet.ip_range}",
+    "${module.webservers_subnet.ip_range}"
+  ]
+}
+
+resource "google_compute_firewall" "allow-ssh-from-everywhere-to-bastion" {
+  name    = "${var.name}-allow-ssh-from-everywhere-to-bastion"
+  project = "${var.project}"
+  network = "${var.name}-network"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+
+  target_tags = ["bastion"]
+}
+
+resource "google_compute_firewall" "allow-ssh-from-bastion-to-webservers" {
+  name               = "${var.name}-allow-ssh-from-bastion-to-webservers"
+  project            = "${var.project}"
+  network            = "${var.name}-network"
+  direction          = "EGRESS"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  target_tags        = ["http"]
+}
+
+resource "google_compute_firewall" "allow-ssh-to-webservers-from-bastion" {
+  name          = "${var.name}-allow-ssh-to-private-network-from-bastion"
+  project       = "${var.project}"
+  network       = "${var.name}-network"
+  direction     = "INGRESS"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_tags   = ["bastion"]
+}
+
+resource "google_compute_firewall" "allow-http-to-appservers" {
+  name          = "${var.name}-allow-http-to-appservers"
+  project       = "${var.project}"
+  network       = "${var.name}-network"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+
+  source_tags   = ["http"]
+}
+
+module "management_subnet" {
+  source   = "./subnet"
+  project  = "${var.project}"
+  region   = "${var.region}"
+  name     = "${var.management_subnet_name}"
+  network  = "${google_compute_network.network.self_link}"
+  ip_range = "${var.management_subnet_ip_range}"
+}
+
+module "webservers_subnet" {
+  source   = "./subnet"
+  project  = "${var.project}"
+  region   = "${var.region}"
+  name     = "${var.webservers_subnet_name}"
+  network  = "${google_compute_network.network.self_link}"
+  ip_range = "${var.webservers_subnet_ip_range}"
+}
+
+module "bastion" {
+  source        = "./bastion"
+  name          = "${var.name}-bastion"
+  project       = "${var.project}"
+  zones         = "${var.zones}"
+  subnet_name   = "${module.management_subnet.name}"
+  image         = "${var.bastion_image}"
+  instance_type = "${var.bastion_instance_type}"
+  user          = "${var.user}"
+  ssh_key       = "${var.ssh_key}"
+}
+
+```
+</details>
+</p>
+
+## SSH into the bastion host:
 `ssh -i ~/.ssh/<private_key> $USER@<public_ip>`
 
 # Task 4: Instance templates
