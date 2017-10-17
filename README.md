@@ -597,7 +597,7 @@ resource "google_compute_instance_template" "webserver" {
     }
   }
 
-  metadata_startup_script = "yum install -y nginx ; service nginx start"
+  metadata_startup_script = "yum install -y nginx ; service nginx start ; hostname > /usr/share/nginx/html/index.html"
 
   tags = ["http"]
 
@@ -712,7 +712,6 @@ modules/lb
 ```
 
 # main.tf
-
 resource "google_compute_global_forwarding_rule" "global_forwarding_rule" {
   name       = "${var.name}-global-forwarding-rule"
   project    = "${var.project}"
