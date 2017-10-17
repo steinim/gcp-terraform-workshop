@@ -230,7 +230,7 @@ Verify your success in the GCP console 💰
 ## Create the network module
 
 ```
-network/
+modules/network/
 ├── vars.tf
 ├── main.tf
 ├── outputs.tf
@@ -246,7 +246,7 @@ network/
 
 <p>
 <details>
-<summary><strong>Subnet module</strong> `network/subnet`</summary>
+<summary><strong>Subnet module</strong> `modules/network/subnet`</summary>
 
 ```
 # main.tf
@@ -283,7 +283,7 @@ output "ip_range" {
 
 <p>
 <details>
-<summary><strong>Bastion host module</strong>`network/bastion`</summary>
+<summary><strong>Bastion host module</strong>`modules/network/bastion`</summary>
 
 ```
 # main.tf
@@ -341,7 +341,7 @@ output "public_ip" {
 
 <p>
 <details>
-<summary><strong>Network</strong>`network/`</summary>
+<summary><strong>Network</strong>`modules/network/`</summary>
 
 ```
 # main.tf
@@ -544,9 +544,11 @@ variable "ssh_key" {}
 </p>
 
 ## Init, plan, apply!
-`terraform init`
-`terraform plan`
-`terraform apply`
+```
+terraform init
+terraform plan
+terraform apply
+```
 
 ## SSH into the bastion host 💰
 `ssh -i ~/.ssh/<private_key> $USER@<public_ip>`
@@ -555,7 +557,125 @@ variable "ssh_key" {}
 
 `git checkout task4`
 
-SSH into the bastion host with ssh-agent forwarding and ssh to a webserver in the private network 💰
+## Create the instance template module
+
+modules/instance-template
+├── main.tf
+├── outputs.tf
+└── vars.tf
+
+<p>
+<details>
+<summary><strong>Create the instance template module</strong> `test/`</summary>
+
+```
+# main.tf
+
+resource "google_compute_instance_template" "webserver" {
+  name         = "${var.name}-webserver-instance-template"
+  project      = "${var.project}"
+  machine_type = "${var.instance_type}"
+  region       = "${var.region}"
+
+  metadata {
+    ssh-keys = "${var.user}:${file("${var.ssh_key}")}"
+  }
+
+  disk {
+    source_image = "${var.image}"
+    auto_delete  = true
+    boot         = true
+  }
+
+  network_interface {
+    subnetwork         = "${var.subnet_name}"
+    subnetwork_project = "${var.project}"
+    access_config {
+      # Ephemeral IP - leaving this block empty will generate a new external IP and assign it to the machine
+    }
+  }
+
+  metadata_startup_script = "yum install -y nginx ; service nginx start"
+
+  tags = ["http"]
+
+  labels = {
+    environment = "${var.env}"
+  }
+}
+
+---
+
+# vars.tf
+
+variable "name" {}
+variable "project" {}
+variable "subnet_name" {}
+variable "image" {}
+variable "instance_type" {}
+variable "user" {}
+variable "ssh_key" {}
+variable "env" {}
+variable "region" {}
+
+---
+
+# outputs.tf
+
+output "instance_template" {
+  value = "${google_compute_instance_template.webserver.self_link}"
+}
+
+```
+
+</details>
+</p>
+
+<p>
+<details>
+<summary><strong>Use the instance template module in your main project</strong> `test/`</summary>
+
+```
+# main.tf
+
+...
+
+module "instance-template" {
+  source        = "../modules/instance-template"
+  name          = "${module.project.name}"
+  env           = "${var.env}"
+  project       = "${module.project.id}"
+  region        = "${var.region}"
+  subnet_name   = "${module.network.management_subnet_name}"
+  image         = "${var.app_image}"
+  instance_type = "${var.app_instance_type}"
+  user          = "${var.user}"
+  ssh_key       = "${var.ssh_key}"
+}
+
+---
+
+# vars.tf
+
+...
+
+variable "appserver_count" { default = 2 }
+variable "app_image" { default = "centos-7-v20170918" }
+variable "app_instance_type" { default = "f1-micro" }
+
+```
+
+</details>
+</p>
+
+## Init, plan, apply!
+```
+terraform init
+terraform plan
+terraform apply
+```
+
+## SSH into the bastion host with ssh-agent forwarding and ssh to a webserver in the private network 💰
 ```
 ssh -A -i ~/.ssh/<private_key> $USER@<public_ip>
 ssh <instance_private_ip
