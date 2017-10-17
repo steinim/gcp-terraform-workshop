@@ -812,7 +812,6 @@ variable "name" {}
 variable "project" {}
 variable "region" {}
 variable "count" {}
-#variable "instances" { type = "list" }
 variable "instance_template" {}
 variable "zones" { type = "list" }
 
@@ -865,6 +864,8 @@ ssh <instance_private_ip
 
 
 # (Task 6: Java application and reverse proxy)
+
+`git checkout task6`
 
 You're on your own!
 
