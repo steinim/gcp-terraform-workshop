@@ -551,7 +551,7 @@ terraform apply
 ```
 
 ## SSH into the bastion host 💰
-`ssh -i ~/.ssh/<private_key> $USER@<public_ip>`
+`ssh -i ~/.ssh/<private_key> $USER@$(terraform output --module=network bastion_public_ip)`
 
 # Task 4: Instance templates
 
