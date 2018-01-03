@@ -40,8 +40,8 @@ export TF_VAR_billing_account=<your_billing_account_id>
 export TF_VAR_region=${GOOGLE_REGION}
 export TF_VAR_user=${USER}
 export TF_VAR_ssh_key=<path_to_your_public_ssh_key>
-export TF_ADMIN=${USER}-terraform-admin
-export TF_CREDS=~/.config/gcloud/terraform-admin.json
+export TF_ADMIN=${USER}-tf-admin
+export TF_CREDS=~/.config/gcloud/tf-admin.json
 ```
 
 **Note:** The TF_ADMIN variable will be used for the name of the Terraform Admin Project and must be unique.
@@ -90,10 +90,10 @@ gcloud projects add-iam-policy-binding ${TF_ADMIN} \
 
 Any actions that Terraform performs require that the API be enabled to do so. In this guide, Terraform requires the following:
 ```
-gcloud service-management enable cloudresourcemanager.googleapis.com
-gcloud service-management enable cloudbilling.googleapis.com
-gcloud service-management enable iam.googleapis.com
-gcloud service-management enable compute.googleapis.com
+gcloud services enable cloudresourcemanager.googleapis.com
+gcloud services enable cloudbilling.googleapis.com
+gcloud services enable iam.googleapis.com
+gcloud services enable compute.googleapis.com
 ```
 
 **NB!** Maybe you need to accept terms under [GCP Privacy & Security](https://console.cloud.google.com/iam-admin/privacy)
@@ -104,13 +104,13 @@ Create the remote backend bucket in Cloud Storage and the backend.tf file for st
 ```
 cd terraform/test
 
-gsutil mb -l ${TF_VAR_region} -p ${TF_ADMIN} gs://${TF_ADMIN} # Ignore warning about AWS_CREDENTIAL_FILE
+gsutil mb -l ${TF_VAR_region} -p ${TF_ADMIN} gs://${TF_ADMIN}
 
 cat > backend.tf <<EOF
 terraform {
  backend "gcs" {
    bucket = "${TF_ADMIN}"
-   path   = "/"
+   prefix  = "terraform/state/test"
  }
 }
 EOF
@@ -270,11 +270,11 @@ variable "ip_range" {}
 ---
 
 # outputs.tf
-output "name" {
-  value = "${google_compute_subnetwork.subnet.name}"
-}
 output "ip_range" {
   value = "${google_compute_subnetwork.subnet.ip_cidr_range}"
+}
+output "self_link" {
+  value = "${google_compute_subnetwork.subnet.self_link}"
 }
 
 ```
@@ -456,7 +456,7 @@ module "bastion" {
   name          = "${var.name}-bastion"
   project       = "${var.project}"
   zones         = "${var.zones}"
-  subnet_name   = "${module.management_subnet.name}"
+  subnet_name   = "${module.management_subnet.self_link}
   image         = "${var.bastion_image}"
   instance_type = "${var.bastion_instance_type}"
   user          = "${var.user}"
@@ -484,12 +484,6 @@ variable "ssh_key" {}
 # outputs.tf
 output "name" {
   value = "${google_compute_network.network.name}"
-}
-output "management_subnet_name" {
-  value = "${module.management_subnet.name}"
-}
-output "webservers_subnet_names" {
-  value = "${module.management_subnet.name}"
 }
 output "bastion_public_ip" {
   value = "${module.bastion.public_ip}"

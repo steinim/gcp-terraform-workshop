@@ -6,6 +6,6 @@ helloworld-java-app/*.iml
 helloworld-java-app/.idea
 
 # Terraform
-**/backend.tf
 **/.terraform
 **/terraform.tfstate.backup
+**/terraform/*/backend.tf
