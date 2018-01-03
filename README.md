@@ -270,11 +270,11 @@ variable "ip_range" {}
 ---
 
 # outputs.tf
-output "name" {
-  value = "${google_compute_subnetwork.subnet.name}"
-}
 output "ip_range" {
   value = "${google_compute_subnetwork.subnet.ip_cidr_range}"
+}
+output "self_link" {
+  value = "${google_compute_subnetwork.subnet.self_link}"
 }
 
 ```
@@ -456,7 +456,7 @@ module "bastion" {
   name          = "${var.name}-bastion"
   project       = "${var.project}"
   zones         = "${var.zones}"
-  subnet_name   = "${module.management_subnet.name}"
+  subnet_name   = "${module.management_subnet.self_link}
   image         = "${var.bastion_image}"
   instance_type = "${var.bastion_instance_type}"
   user          = "${var.user}"
