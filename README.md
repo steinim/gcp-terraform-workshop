@@ -40,8 +40,8 @@ export TF_VAR_billing_account=<your_billing_account_id>
 export TF_VAR_region=${GOOGLE_REGION}
 export TF_VAR_user=${USER}
 export TF_VAR_ssh_key=<path_to_your_public_ssh_key>
-export TF_ADMIN=${USER}-terraform-admin
-export TF_CREDS=~/.config/gcloud/terraform-admin.json
+export TF_ADMIN=${USER}-tf-admin
+export TF_CREDS=~/.config/gcloud/tf-admin.json
 ```
 
 **Note:** The TF_ADMIN variable will be used for the name of the Terraform Admin Project and must be unique.
