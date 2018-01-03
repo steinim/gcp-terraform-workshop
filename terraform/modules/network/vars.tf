@@ -10,4 +10,3 @@ variable "bastion_image" {}
 variable "bastion_instance_type" {}
 variable "user" {}
 variable "ssh_key" {}
-#variable "db_ip" {}
