@@ -8,3 +8,4 @@ helloworld-java-app/.idea
 # Terraform
 **/.terraform
 **/terraform.tfstate.backup
+**/terraform/*/backend.tf
