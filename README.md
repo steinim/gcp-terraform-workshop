@@ -110,7 +110,7 @@ cat > backend.tf <<EOF
 terraform {
  backend "gcs" {
    bucket = "${TF_ADMIN}"
-   path   = "/test"
+   prefix  = "terraform/state/test"
  }
 }
 EOF
