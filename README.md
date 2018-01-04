@@ -567,6 +567,7 @@ modules/instance-template
 ```
 # main.tf
 
+
 resource "google_compute_instance_template" "webserver" {
   name         = "${var.name}-webserver-instance-template"
   project      = "${var.project}"
@@ -584,7 +585,7 @@ resource "google_compute_instance_template" "webserver" {
   }
 
   network_interface {
-    subnetwork         = "${var.subnet_name}"
+    network            = "${var.network_name}"
     subnetwork_project = "${var.project}"
     access_config {
       # Ephemeral IP - leaving this block empty will generate a new external IP and assign it to the machine
@@ -606,7 +607,7 @@ resource "google_compute_instance_template" "webserver" {
 
 variable "name" {}
 variable "project" {}
-variable "subnet_name" {}
+variable "network_name" {}
 variable "image" {}
 variable "instance_type" {}
 variable "user" {}
@@ -642,7 +643,7 @@ module "instance-template" {
   env           = "${var.env}"
   project       = "${module.project.id}"
   region        = "${var.region}"
-  subnet_name   = "${module.network.management_subnet_name}"
+  network_name  = "${module.network.name}"
   image         = "${var.app_image}"
   instance_type = "${var.app_instance_type}"
   user          = "${var.user}"
