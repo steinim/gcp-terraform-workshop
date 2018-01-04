@@ -28,7 +28,7 @@ module "instance-template" {
   env           = "${var.env}"
   project       = "${module.project.id}"
   region        = "${var.region}"
-  subnet_name   = "${module.network.management_subnet_name}"
+  network_name  = "${module.network.name}"
   image         = "${var.app_image}"
   instance_type = "${var.app_instance_type}"
   user          = "${var.user}"

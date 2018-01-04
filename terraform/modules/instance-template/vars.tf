@@ -1,6 +1,6 @@
 variable "name" {}
 variable "project" {}
-variable "subnet_name" {}
+variable "network_name" {}
 variable "image" {}
 variable "instance_type" {}
 variable "user" {}
