@@ -585,7 +585,6 @@ resource "google_compute_instance_template" "webserver" {
 
   network_interface {
     subnetwork         = "${var.subnet_name}"
-    subnetwork_project = "${var.project}"
     access_config {
       # Ephemeral IP - leaving this block empty will generate a new external IP and assign it to the machine
     }
