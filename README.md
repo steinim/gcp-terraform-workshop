@@ -882,14 +882,7 @@ ssh <instance_private_ip
 
 💰💰💰
 
-
-# (Task 6: Java application and reverse proxy)
-
-`git checkout task6`
-
-You're on your own!
-
-# (Task 7: Database)
+# (Task 6: Database)
 
 You're on your own!
 
