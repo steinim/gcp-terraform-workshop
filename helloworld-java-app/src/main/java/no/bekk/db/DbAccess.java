@@ -12,32 +12,30 @@ public class DbAccess {
 	private ResultSet resultSet = null;
 	private String user = null;
 	private String password = null;
-	private String dbServer = null;
-	private String tablename = null;
-	private String schema = null;
+	private String dbName = null;
+        private String instanceConnectionName = null;
 	
 
 	public DbAccess() {
 		user = System.getProperty("db.user");
-		schema = System.getProperty("db.schema");
 		password = System.getProperty("db.password");
-		dbServer = System.getProperty("db.server");
-		tablename = System.getProperty("db.tablename");
+		dbName = System.getProperty("db.name");
+                instanceConnectionName = System.getProperty("db.instanceConnectionName");
 		try {
-			String dbUrl = "jdbc:postgresql://" + dbServer +"/" + schema + "?user="+ user + "&password=" + password;
-			connect = DriverManager.getConnection(dbUrl);
+			String dbUrl = String.format("jdbc:mysql://google/%s?cloudSqlInstance=%s&socketFactory=com.google.cloud.sql.mysql.SocketFactory", dbName, instanceConnectionName);
+			connect = DriverManager.getConnection(dbUrl, user, password);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public String sayHello() throws Exception {
+	public String sayNow() throws Exception {
 		try {
 			statement = connect.createStatement();
-			resultSet = statement.executeQuery("select * from " + tablename);
+			resultSet = statement.executeQuery("SELECT NOW()");
 			String message = null;
 			while (resultSet.next()) {
-				message = resultSet.getString("MESSAGE");
+				message = resultSet.getString(1);
 			}
 			return message + " :)";
 		} catch (Exception e) {

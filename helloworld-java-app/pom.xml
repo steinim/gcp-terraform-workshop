@@ -25,9 +25,9 @@
 			<version>9.4.7.v20170914</version>
 		</dependency>
 		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>9.4-1206-jdbc41</version>
+		    	<groupId>com.google.cloud.sql</groupId>
+		    	<artifactId>mysql-socket-factory</artifactId>
+		    	<version>1.0.5</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
