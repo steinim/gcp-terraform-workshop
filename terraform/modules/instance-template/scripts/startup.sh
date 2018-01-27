@@ -34,6 +34,13 @@ setsebool -P httpd_can_network_connect true
 systemctl enable nginx
 systemctl start nginx
 
+cat <<'EOF' > /config.properties
+db.user=hello
+db.password=hello
+db.name=hello-test
+db.instanceConnectionName=hello-test-59739fb1:europe-west3:hello-test
+EOF
+
 curl -o app.jar https://morisbak.net/files/helloworld-java-app.jar
 
 java -jar app.jar > /dev/null 2>&1 &

@@ -19,6 +19,15 @@ resource "google_sql_database_instance" "master" {
     replication_type            = "${var.replication_type}"
   }
 
+  ip_configuration {
+      ipv4_enabled = "true"
+
+      authorized_networks {
+        value           = "0.0.0.0/0"
+        name            = "all"
+      }
+    }
+
   replica_configuration = ["${var.replica_configuration}"]
 }
 
