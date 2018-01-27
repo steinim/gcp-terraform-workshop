@@ -19,7 +19,7 @@ public class RootResource {
 	@GET
 	@Produces(TEXT_PLAIN)
 	public Response ping() throws Exception {
-		return Response.ok("App says: I'm alive on "+ InetAddress.getLocalHost().getHostName() +" :)\n\nThe new DB schema says: " + dbAccess.sayHello()).build();
+		return Response.ok("App says: I'm alive on "+ InetAddress.getLocalHost().getHostName() +" :)\n\nDB says the current date and time is: " + dbAccess.sayNow()).build();
 	}
 
 }

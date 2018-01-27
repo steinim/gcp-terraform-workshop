@@ -1,4 +1,4 @@
-module "project" {
+odule "project" {
   source          = "../modules/project"
   name            = "hello-${var.env}"
   region          = "${var.region}"
@@ -34,3 +34,25 @@ module "instance-template" {
   user          = "${var.user}"
   ssh_key       = "${var.ssh_key}"
 }
+
+module "lb" {
+  source            = "../modules/lb"
+  name              = "${module.project.name}"
+  project           = "${module.project.id}"
+  region            = "${var.region}"
+  count             = "${var.appserver_count}"
+  instance_template = "${module.instance-template.instance_template}"
+  zones             = "${var.zones}"
+}
+
+module "mysql-db" {
+  source           = "../modules/db"
+  name             = "${module.project.name}"
+  project          = "${module.project.id}"
+  region           = "${var.region}"
+  db_name          = "${module.project.name}"
+  user_name        = "hello"
+  user_password    = "hello"
+  database_version = "MYSQL_5_6"
+}
+
