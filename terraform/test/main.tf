@@ -1,4 +1,4 @@
-odule "project" {
+module "project" {
   source          = "../modules/project"
   name            = "hello-${var.env}"
   region          = "${var.region}"
