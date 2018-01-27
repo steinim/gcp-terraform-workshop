@@ -34,7 +34,7 @@ setsebool -P httpd_can_network_connect true
 systemctl enable nginx
 systemctl start nginx
 
-curl -o app.jar https://morisbak.net/files/devops.jar
+curl -o app.jar https://morisbak.net/files/helloworld-java-app.jar
 
 java -jar app.jar > /dev/null 2>&1 &
 
