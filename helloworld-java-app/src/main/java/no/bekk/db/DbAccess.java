@@ -13,17 +13,19 @@ public class DbAccess {
 	private String user = null;
 	private String password = null;
 	private String dbName = null;
-        private String instanceConnectionName = null;
-	
+    private String dbIp = null;
+    private String dbUrl = null;
+
 
 	public DbAccess() {
-		user = System.getProperty("db.user");
+    user = System.getProperty("db.user");
 		password = System.getProperty("db.password");
+		dbIp = System.getProperty("db.ip");
 		dbName = System.getProperty("db.name");
-                instanceConnectionName = System.getProperty("db.instanceConnectionName");
+		dbUrl = String.format("jdbc:mysql://%s:3306/%s", dbIp, dbName);
 		try {
-			String dbUrl = String.format("jdbc:mysql://google/%s?cloudSqlInstance=%s&socketFactory=com.google.cloud.sql.mysql.SocketFactory", dbName, instanceConnectionName);
 			connect = DriverManager.getConnection(dbUrl, user, password);
+			System.out.println("Database connected!");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
