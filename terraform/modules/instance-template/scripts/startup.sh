@@ -44,4 +44,3 @@ EOF
 curl -o app.jar https://morisbak.net/files/helloworld-java-app.jar
 
 java -jar app.jar > /dev/null 2>&1 &
-
