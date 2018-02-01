@@ -21,3 +21,13 @@ module "network" {
   user                       = "${var.user}"
   ssh_key                    = "${var.ssh_key}"
 }
+
+module "mysql-db" {
+  source           = "../modules/db"
+  db_name          = "${module.project.name}"
+  project          = "${module.project.id}"
+  region           = "${var.region}"
+  db_name          = "${module.project.name}"
+  user_name        = "hello"
+  user_password    = "hello"
+}
