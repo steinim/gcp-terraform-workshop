@@ -21,4 +21,3 @@ resource "google_project_services" "project" {
    "sqladmin.googleapis.com"
  ]
 }
-

@@ -1,3 +1,13 @@
+data "template_file" "init" {
+  template = "${file("${path.module}/scripts/startup.sh")}"
+  vars {
+    db_name     = "${var.db_name}"
+    db_user     = "${var.db_user}"
+    db_password = "${var.db_password}"
+    db_ip       = "${var.db_ip}"
+  }
+}
+
 resource "google_compute_instance_template" "webserver" {
   name         = "${var.name}-webserver-instance-template"
   project      = "${var.project}"
@@ -15,14 +25,13 @@ resource "google_compute_instance_template" "webserver" {
   }
 
   network_interface {
-    subnetwork         = "${var.subnet_name}"
-    subnetwork_project = "${var.project}"
+    network            = "${var.network_name}"
     access_config {
       # Ephemeral IP - leaving this block empty will generate a new external IP and assign it to the machine
     }
   }
 
-  metadata_startup_script = "yum install -y nginx ; service nginx start ; hostname > /usr/share/nginx/html/index.html"
+  metadata_startup_script = "${data.template_file.init.rendered}"
 
   tags = ["http"]
 
@@ -30,4 +39,3 @@ resource "google_compute_instance_template" "webserver" {
     environment = "${var.env}"
   }
 }
-

@@ -54,7 +54,7 @@ resource "google_compute_firewall" "allow-ssh-from-bastion-to-webservers" {
     ports    = ["22"]
   }
 
-  target_tags        = ["http"]
+  target_tags        = ["ssh"]
 }
 
 resource "google_compute_firewall" "allow-ssh-to-webservers-from-bastion" {
@@ -86,18 +86,21 @@ resource "google_compute_firewall" "allow-http-to-appservers" {
   source_tags   = ["http"]
 }
 
-#resource "google_compute_firewall" "allow-connection-to-db" {
-#  name          = "${var.name}-allow-connection-to-db"
-#  project       = "${var.project}"
-#  network       = "${var.name}-network"
-#  direction     = "EGRESS"
-#  destination_ranges = ["${var.db_ip}"]
-#
-#  allow {
-#    protocol = "tcp"
-#    ports    = ["3306"]
-#  }
-#}
+resource "google_compute_firewall" "allow-db-connect-from-webservers" {
+  name               = "${var.name}-allow-db-connect-from-webservers"
+  project            = "${var.project}"
+  network            = "${var.name}-network"
+  direction          = "EGRESS"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["3306"]
+  }
+
+  destination_ranges = ["0.0.0.0/0"]
+
+  target_tags        = ["db"]
+}
 
 module "management_subnet" {
   source   = "./subnet"

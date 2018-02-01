@@ -20,20 +20,23 @@ module "network" {
   bastion_instance_type      = "${var.bastion_instance_type}"
   user                       = "${var.user}"
   ssh_key                    = "${var.ssh_key}"
-  #db_ip                      = "${module.db.ip}"
 }
 
 module "instance-template" {
-  source            = "../modules/instance-template"
-  name              = "${module.project.name}"
-  env               = "${var.env}"
-  project           = "${module.project.id}"
-  region            = "${var.region}"
-  subnet_name       = "${module.network.management_subnet_name}"
-  image             = "${var.app_image}"
-  instance_type     = "${var.app_instance_type}"
-  user              = "${var.user}"
-  ssh_key           = "${var.ssh_key}"
+  source        = "../modules/instance-template"
+  name          = "${module.project.name}"
+  env           = "${var.env}"
+  project       = "${module.project.id}"
+  region        = "${var.region}"
+  network_name  = "${module.network.name}"
+  image         = "${var.app_image}"
+  instance_type = "${var.app_instance_type}"
+  user          = "${var.user}"
+  ssh_key       = "${var.ssh_key}"
+  db_name       = "${module.project.name}"
+  db_user       = "hello"
+  db_password   = "hello"
+  db_ip         = "${module.mysql-db.instance_address}"
 }
 
 module "lb" {
@@ -46,12 +49,13 @@ module "lb" {
   zones             = "${var.zones}"
 }
 
-#module "db" {
-#  source               = "../modules/db"
-#  name                 = "${module.project.name}"
-#  region               = "${var.db_region}"
-#  zones                = "${var.zones}"
-#  project              = "${module.project.id}"
-#  host                 = "${module.network.gateway_ipv4}"
-#  tier                 = "${var.db_tier}"
-#}
+module "mysql-db" {
+  source           = "../modules/db"
+  db_name          = "${module.project.name}"
+  project          = "${module.project.id}"
+  region           = "${var.region}"
+  db_name          = "${module.project.name}"
+  user_name        = "hello"
+  user_password    = "hello"
+}
+

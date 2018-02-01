@@ -1,38 +1,46 @@
-resource "random_id" "db_name" {
-  prefix      = "${var.name}-master-db-"
-  byte_length = 8
-}
-
 resource "google_sql_database_instance" "master" {
-  name    = "${random_id.db_name.hex}"
-  region  = "${var.region}"
-  project = "${var.project}"
+  name             = "${var.db_name}"
+  project          = "${var.project}"
+  region           = "${var.region}"
+  database_version = "${var.database_version}"
+
   settings {
-    tier = "${var.tier}"
+    tier                        = "${var.tier}"
+    activation_policy           = "${var.activation_policy}"
+    disk_autoresize             = "${var.disk_autoresize}"
+    backup_configuration        = ["${var.backup_configuration}"]
+    location_preference         = ["${var.location_preference}"]
+    maintenance_window          = ["${var.maintenance_window}"]
+    disk_size                   = "${var.disk_size}"
+    disk_type                   = "${var.disk_type}"
+    pricing_plan                = "${var.pricing_plan}"
+    replication_type            = "${var.replication_type}"
     ip_configuration {
-      ipv4_enabled = "true"
-      authorized_networks {
-        name  = "all"
-        value = "0.0.0.0/0"
-      }
+        ipv4_enabled = "true"
+
+        authorized_networks {
+          value           = "0.0.0.0/0"
+          name            = "all"
+        }
     }
   }
+
+  replica_configuration = ["${var.replica_configuration}"]
 }
 
-resource "google_sql_database" "db" {
-  name      = "${var.name}-db"
+resource "google_sql_database" "default" {
+  name      = "${var.db_name}"
+  project   = "${var.project}"
   instance  = "${google_sql_database_instance.master.name}"
-  charset   = "latin1"
-  collation = "latin1_swedish_ci"
+  charset   = "${var.db_charset}"
+  collation = "${var.db_collation}"
 }
 
-resource "random_id" "password" {
-  byte_length = 32
-}
-
-resource "google_sql_user" "db_user" {
-  name     = "${var.name}"
+resource "google_sql_user" "default" {
+  name     = "${var.user_name}"
+  project  = "${var.project}"
   instance = "${google_sql_database_instance.master.name}"
-  host     = "${var.host}"
-  password = "${random_id.password.b64}"
+  host     = "${var.user_host}"
+  password = "${var.user_password}"
 }
+
