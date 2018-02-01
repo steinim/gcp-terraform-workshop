@@ -22,6 +22,16 @@ module "network" {
   ssh_key                    = "${var.ssh_key}"
 }
 
+module "mysql-db" {
+  source           = "../modules/db"
+  db_name          = "${module.project.name}"
+  project          = "${module.project.id}"
+  region           = "${var.region}"
+  db_name          = "${module.project.name}"
+  user_name        = "hello"
+  user_password    = "hello"
+}
+
 module "instance-template" {
   source        = "../modules/instance-template"
   name          = "${module.project.name}"
@@ -48,14 +58,3 @@ module "lb" {
   instance_template = "${module.instance-template.instance_template}"
   zones             = "${var.zones}"
 }
-
-module "mysql-db" {
-  source           = "../modules/db"
-  db_name          = "${module.project.name}"
-  project          = "${module.project.id}"
-  region           = "${var.region}"
-  db_name          = "${module.project.name}"
-  user_name        = "hello"
-  user_password    = "hello"
-}
-

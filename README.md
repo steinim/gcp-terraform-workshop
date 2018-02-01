@@ -94,6 +94,7 @@ gcloud services enable cloudresourcemanager.googleapis.com
 gcloud services enable cloudbilling.googleapis.com
 gcloud services enable iam.googleapis.com
 gcloud services enable compute.googleapis.com
+gcloud services enable sqladmin.googleapis.com
 ```
 
 **NB!** Maybe you need to accept terms under [GCP Privacy & Security](https://console.cloud.google.com/iam-admin/privacy)
@@ -160,7 +161,8 @@ resource "google_project" "project" {
 resource "google_project_services" "project" {
  project = "${google_project.project.project_id}"
  services = [
-   "compute.googleapis.com"
+   "compute.googleapis.com",
+   "sqladmin.googleapis.com"
  ]
 }
 ```
@@ -401,7 +403,7 @@ resource "google_compute_firewall" "allow-ssh-from-bastion-to-webservers" {
     ports    = ["22"]
   }
 
-  target_tags        = ["http"]
+  target_tags        = ["ssh"]
 }
 
 resource "google_compute_firewall" "allow-ssh-to-webservers-from-bastion" {
@@ -433,6 +435,22 @@ resource "google_compute_firewall" "allow-http-to-appservers" {
   source_tags   = ["http"]
 }
 
+resource "google_compute_firewall" "allow-db-connect-from-webservers" {
+  name               = "${var.name}-allow-db-connect-from-webservers"
+  project            = "${var.project}"
+  network            = "${var.name}-network"
+  direction          = "EGRESS"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["3306"]
+  }
+
+  destination_ranges = ["0.0.0.0/0"]
+
+  target_tags        = ["db"]
+}
+
 module "management_subnet" {
   source   = "./subnet"
   project  = "${var.project}"
@@ -456,7 +474,7 @@ module "bastion" {
   name          = "${var.name}-bastion"
   project       = "${var.project}"
   zones         = "${var.zones}"
-  subnet_name   = "${module.management_subnet.self_link}
+  subnet_name   = "${module.management_subnet.self_link}"
   image         = "${var.bastion_image}"
   instance_type = "${var.bastion_instance_type}"
   user          = "${var.user}"
@@ -547,9 +565,189 @@ terraform apply
 ## SSH into the bastion host 💰
 `ssh -i ~/.ssh/<private_key> $USER@$(terraform output --module=network bastion_public_ip)`
 
-# Task 4: Instance templates
+
+# Task 4: Database
 
 `git checkout task4`
+
+## Create the db module
+
+```
+modules/db
+├── main.tf
+├── outputs.tf
+└── vars.tf
+```
+
+<p>
+<details>
+<summary><strong>Database module</strong> `modules/db/`</summary>
+
+```
+# main.tf
+resource "google_sql_database_instance" "master" {
+  name             = "${var.db_name}"
+  project          = "${var.project}"
+  region           = "${var.region}"
+  database_version = "${var.database_version}"
+
+  settings {
+    tier                        = "${var.tier}"
+    activation_policy           = "${var.activation_policy}"
+    disk_autoresize             = "${var.disk_autoresize}"
+    backup_configuration        = ["${var.backup_configuration}"]
+    location_preference         = ["${var.location_preference}"]
+    maintenance_window          = ["${var.maintenance_window}"]
+    disk_size                   = "${var.disk_size}"
+    disk_type                   = "${var.disk_type}"
+    pricing_plan                = "${var.pricing_plan}"
+    replication_type            = "${var.replication_type}"
+    ip_configuration {
+        ipv4_enabled = "true"
+
+        authorized_networks {
+          value           = "0.0.0.0/0"
+          name            = "all"
+        }
+    }
+  }
+
+  replica_configuration = ["${var.replica_configuration}"]
+}
+
+resource "google_sql_database" "default" {
+  name      = "${var.db_name}"
+  project   = "${var.project}"
+  instance  = "${google_sql_database_instance.master.name}"
+  charset   = "${var.db_charset}"
+  collation = "${var.db_collation}"
+}
+
+resource "google_sql_user" "default" {
+  name     = "${var.user_name}"
+  project  = "${var.project}"
+  instance = "${google_sql_database_instance.master.name}"
+  host     = "${var.user_host}"
+  password = "${var.user_password}"
+}
+
+---
+
+# vars.tf
+
+variable project { default = "" }
+
+variable region { default = "europe-west1" }
+
+variable database_version { default = "MYSQL_5_6" }
+
+variable tier { default = "db-f1-micro" }
+
+variable db_name { default = "default" }
+
+variable db_charset { default = "" }
+
+variable db_collation { default = "" }
+
+variable user_name { default = "default" }
+
+variable user_host { default = "%" }
+
+variable user_password { default = "" }
+
+variable activation_policy { default = "ALWAYS" }
+
+variable disk_autoresize { default = false }
+
+variable disk_size { default = 10 }
+
+variable disk_type { default = "PD_SSD" }
+
+variable pricing_plan { default = "PER_USE" }
+
+variable replication_type { default = "SYNCHRONOUS" }
+
+variable backup_configuration {
+  type    = "map"
+  default = {}
+}
+
+variable location_preference {
+  type    = "list"
+  default = []
+}
+
+variable maintenance_window {
+  type    = "list"
+  default = []
+}
+
+variable replica_configuration {
+  type    = "list"
+  default = []
+}
+
+
+---
+
+# outputs.tf
+
+output instance_address {
+  value       = "${google_sql_database_instance.master.ip_address.0.ip_address}"
+}
+
+---
+```
+</details>
+</p>
+
+<p>
+<details>
+<summary><strong>Use the db module in your main project</strong> `test/`</summary>
+
+```
+# main.tf
+
+...
+
+module "mysql-db" {
+  source           = "../modules/db"
+  db_name          = "${module.project.name}"
+  project          = "${module.project.id}"
+  region           = "${var.region}"
+  db_name          = "${module.project.name}"
+  user_name        = "hello"
+  user_password    = "hello"
+}
+
+---
+
+# vars.tf
+
+...
+
+variable "db_region" { default = "europe-west1" }
+
+```
+
+</details>
+</p>
+
+## Init, plan, apply!
+```
+terraform init
+terraform plan
+terraform apply
+```
+
+## Check that the db is up and accepting connections 💰
+
+Connect to the db from your local machine.
+
+
+# Task 5: Instance templates
+
+`git checkout task5`
 
 ## Create the instance template module
 
@@ -557,7 +755,8 @@ terraform apply
 modules/instance-template
 ├── main.tf
 ├── outputs.tf
-└── vars.tf
+├── vars.tf
+└── scripts/startup.sh
 ```
 
 <p>
@@ -566,6 +765,16 @@ modules/instance-template
 
 ```
 # main.tf
+data "template_file" "init" {
+  template = "${file("${path.module}/scripts/startup.sh")}"
+  vars {
+    db_name     = "${var.db_name}"
+    db_user     = "${var.db_user}"
+    db_password = "${var.db_password}"
+    db_ip       = "${var.db_ip}"
+  }
+}
+
 resource "google_compute_instance_template" "webserver" {
   name         = "${var.name}-webserver-instance-template"
   project      = "${var.project}"
@@ -589,7 +798,7 @@ resource "google_compute_instance_template" "webserver" {
     }
   }
 
-  metadata_startup_script = "${file("${path.module}/scripts/startup.sh")}"
+  metadata_startup_script = "${data.template_file.init.rendered}"
 
   tags = ["http"]
 
@@ -611,6 +820,10 @@ variable "user" {}
 variable "ssh_key" {}
 variable "env" {}
 variable "region" {}
+variable "db_name" {}
+variable "db_user" {}
+variable "db_password" {}
+variable "db_ip" {}
 
 ---
 
@@ -659,7 +872,14 @@ setsebool -P httpd_can_network_connect true
 systemctl enable nginx
 systemctl start nginx
 
-curl -o app.jar https://morisbak.net/files/devops.jar
+cat <<'EOF' > /config.properties
+db.user=${db_user}
+db.password=${db_password}
+db.name=${db_name}
+db.ip=${db_ip}
+EOF
+
+curl -o app.jar https://morisbak.net/files/helloworld-java-app.jar
 
 java -jar app.jar > /dev/null 2>&1 &
 
@@ -716,9 +936,9 @@ terraform apply
 
 Browse to the public ip's of the webservers.
 
-# Task 5: Auto scaling and load balancing
+# Task 6: Auto scaling and load balancing
 
-`git checkout task5`
+`git checkout task6`
 
 What you'll need 😰:
 
@@ -732,7 +952,7 @@ What you'll need 😰:
   * google_compute_instance_group
   * google_compute_autoscaler
 
-## Create th lb module
+## Create the lb module
 
 ```
 modules/lb
@@ -814,12 +1034,12 @@ resource "google_compute_autoscaler" "autoscaler" {
   target  = "${element(google_compute_instance_group_manager.webservers.*.self_link, count.index)}"
 
   autoscaling_policy = {
-    max_replicas    = 3
+    max_replicas    = 2
     min_replicas    = 1
-    cooldown_period = 60
+    cooldown_period = 90
 
     cpu_utilization {
-      target = 0.6
+      target = 0.8
     }
   }
 }
@@ -834,7 +1054,6 @@ variable "region" {}
 variable "count" {}
 variable "instance_template" {}
 variable "zones" { type = "list" }
-
 
 ```
 </details>
@@ -881,10 +1100,6 @@ ssh <instance_private_ip
 ## Browse to the public ip of the load balancer 💰
 
 💰💰💰
-
-# (Task 6: Database)
-
-You're on your own!
 
 # Cleaning up
 
