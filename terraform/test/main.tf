@@ -47,12 +47,11 @@ module "lb" {
 
 module "mysql-db" {
   source           = "../modules/db"
-  name             = "${module.project.name}"
+  db_name          = "${module.project.name}"
   project          = "${module.project.id}"
   region           = "${var.region}"
   db_name          = "${module.project.name}"
   user_name        = "hello"
   user_password    = "hello"
-  database_version = "MYSQL_5_6"
 }
 
