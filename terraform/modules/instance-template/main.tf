@@ -1,3 +1,12 @@
+data "template_file" "init" {
+  template = "${file("${path.module}/scripts/startup.sh")}"
+  vars {
+    db_name     = "${var.db_name}"
+    db_user     = "${var.db_user}"
+    db_password = "${var.db_password}"
+    db_ip       = "${var.db_ip}"
+  }
+}
 
 resource "google_compute_instance_template" "webserver" {
   name         = "${var.name}-webserver-instance-template"
@@ -22,7 +31,7 @@ resource "google_compute_instance_template" "webserver" {
     }
   }
 
-  metadata_startup_script = "${file("${path.module}/scripts/startup.sh")}"
+  metadata_startup_script = "${data.template_file.init.rendered}"
 
   tags = ["http"]
 

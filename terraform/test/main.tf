@@ -33,6 +33,10 @@ module "instance-template" {
   instance_type = "${var.app_instance_type}"
   user          = "${var.user}"
   ssh_key       = "${var.ssh_key}"
+  db_name       = "${module.project.name}"
+  db_user       = "hello"
+  db_password   = "hello"
+  db_ip         = "${module.mysql-db.instance_address}"
 }
 
 module "lb" {

@@ -65,12 +65,12 @@ resource "google_compute_autoscaler" "autoscaler" {
   target  = "${element(google_compute_instance_group_manager.webservers.*.self_link, count.index)}"
 
   autoscaling_policy = {
-    max_replicas    = 3
+    max_replicas    = 2
     min_replicas    = 1
-    cooldown_period = 60
+    cooldown_period = 90
 
     cpu_utilization {
-      target = 0.6
+      target = 0.8
     }
   }
 }

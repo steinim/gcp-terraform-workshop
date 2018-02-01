@@ -7,3 +7,7 @@ variable "user" {}
 variable "ssh_key" {}
 variable "env" {}
 variable "region" {}
+variable "db_name" {}
+variable "db_user" {}
+variable "db_password" {}
+variable "db_ip" {}

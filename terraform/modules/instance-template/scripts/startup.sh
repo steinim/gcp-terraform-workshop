@@ -35,10 +35,10 @@ systemctl enable nginx
 systemctl start nginx
 
 cat <<'EOF' > /config.properties
-db.user=hello
-db.password=hello
-db.name=hello-test
-db.instanceConnectionName=hello-test-59739fb1:europe-west3:hello-test
+db.user=${db_user}
+db.password=${db_password}
+db.name=${db_name}
+db.ip=${db_ip}
 EOF
 
 curl -o app.jar https://morisbak.net/files/helloworld-java-app.jar
