@@ -1098,10 +1098,9 @@ terraform plan
 terraform apply
 ```
 
-## SSH into the bastion host with ssh-agent forwarding and ssh to a webserver in the private network 💰
+## SSH into a webserver in the private network using the bastion host as a jump server 💰
+ssh -i ~/.ssh/id_rsa -J $USER@$(terraform output --module=network bastion_public_ip) $USER@<webserver-private-ip> -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
 ```
-ssh -A -i ~/.ssh/<private_key> $USER@<public_ip>
-ssh <instance_private_ip
 ```
 
 ## Browse to the public ip of the load balancer 💰
