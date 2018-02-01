@@ -743,6 +743,9 @@ terraform apply
 ## Check that the db is up and accepting connections 💰
 
 Connect to the db from your local machine.
+```
+mysql --host=$(terraform output --module=mysql-db instance_address) --user=hello --password
+```
 
 
 # Task 5: Instance templates
