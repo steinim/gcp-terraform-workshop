@@ -3,10 +3,6 @@ Introduction to provisioning basic infrastructure on Google Cloud Platform with 
 
 In this tutorial you will learn how to use Terraform for provisioning basic infrastructure on the Google Cloud Platform (GCP), including projects, networking and deployment of webservers on Compute Engine in an autoscaled and load balanced environment. Further work includes setting up a Cloud SQL database and deployment of a Java application with a reverse proxy in front.
 
-You can find slides from a talk I did about this workshop at Config Management Camp 2018 here: [https://steinim.github.io/slides/terraform-on-gcp/](https://steinim.github.io/slides/terraform-on-gcp/)
-
-Pull requests to improve this workshop is very much appreciated!
-
 ## Before you begin
 1. This tutorial assumes you already have a Cloud Platform account set up for your organization and that you are allowed to make organizational-level changes in the account.
 2. Install Google Cloud SDK and Terraform.
