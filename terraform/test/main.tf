@@ -48,3 +48,13 @@ module "instance-template" {
   db_password   = "hello"
   db_ip         = "${module.mysql-db.instance_address}"
 }
+
+module "lb" {
+  source            = "../modules/lb"
+  name              = "${module.project.name}"
+  project           = "${module.project.id}"
+  region            = "${var.region}"
+  count             = "${var.appserver_count}"
+  instance_template = "${module.instance-template.instance_template}"
+  zones             = "${var.zones}"
+}
