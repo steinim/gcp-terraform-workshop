@@ -43,4 +43,18 @@ module "instance-template" {
   instance_type = "${var.app_instance_type}"
   user          = "${var.user}"
   ssh_key       = "${var.ssh_key}"
+  db_name       = "${module.project.name}"
+  db_user       = "hello"
+  db_password   = "hello"
+  db_ip         = "${module.mysql-db.instance_address}"
+}
+
+module "lb" {
+  source            = "../modules/lb"
+  name              = "${module.project.name}"
+  project           = "${module.project.id}"
+  region            = "${var.region}"
+  count             = "${var.appserver_count}"
+  instance_template = "${module.instance-template.instance_template}"
+  zones             = "${var.zones}"
 }
