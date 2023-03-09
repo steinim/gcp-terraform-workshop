@@ -27,7 +27,6 @@ module "mysql-db" {
   db_name          = "${module.project.name}"
   project          = "${module.project.id}"
   region           = "${var.region}"
-  db_name          = "${module.project.name}"
   user_name        = "hello"
   user_password    = "hello"
 }
